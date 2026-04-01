@@ -41,7 +41,9 @@ public class UsuarioApplicationTest {
     @Test
     void testCriarUsuario() {
 
-        /* ========== Montagem do cenario ========== */
+        /* ========== Montagem do cenario ==========
+        * Criar um usuário com email que NÃO existe no sistema
+          deve permitir criar normalmente */
         Usuario usuario = novoUsuario(1L, "ana@spaceroom.com");
         when(usuarioRepository.findByEmail(usuario.getEmail())).thenReturn(Optional.empty());
         when(usuarioRepository.save(any(Usuario.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -57,7 +59,12 @@ public class UsuarioApplicationTest {
     @Test
     void testCriarUsuario_EmailDuplicado() {
 
-        /* ========== Montagem do cenario ========== */
+         /* ========== Montagem do cenario ==========
+           Já existe um usuário cadastrado com esse email
+           ao tentar criar outro com o mesmo email
+           o sistema deve impedir a criação por duplicidade
+        */
+
         Usuario existente = novoUsuario(1L, "ana@spaceroom.com");
         Usuario novo = novoUsuario(2L, "ana@spaceroom.com");
         when(usuarioRepository.findByEmail("ana@spaceroom.com")).thenReturn(Optional.of(existente));
@@ -73,7 +80,11 @@ public class UsuarioApplicationTest {
     @Test
     void testListarTodosUsuarios() {
 
-        /* ========== Montagem do cenario ========== */
+        /* ========== Montagem do cenario ==========
+           Existem usuários cadastrados no sistema
+           ao solicitar a listagem
+           o sistema deve retornar todos os usuários
+        */
         when(usuarioRepository.findAll()).thenReturn(List.of(novoUsuario(1L, "u1@x.com"), novoUsuario(2L, "u2@x.com")));
 
         /* ========== Execucao ========== */
@@ -86,7 +97,11 @@ public class UsuarioApplicationTest {
     @Test
     void testBuscarUsuarioPorId() {
 
-        /* ========== Montagem do cenario ========== */
+        /* ========== Montagem do cenario ==========
+           Existe um usuário com o ID informado
+           ao buscar por esse ID
+           o sistema deve retornar o usuário correspondente
+        */
         Usuario usuario = novoUsuario(1L, "u1@x.com");
         when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuario));
 
@@ -100,7 +115,11 @@ public class UsuarioApplicationTest {
     @Test
     void testBuscarUsuarioPorId_Inexistente() {
 
-        /* ========== Montagem do cenario ========== */
+        /* ========== Montagem do cenario ==========
+           Não existe nenhum usuário com o ID informado
+           ao tentar buscar esse registro
+           o sistema deve lançar erro de não encontrado
+        */
         when(usuarioRepository.findById(99L)).thenReturn(Optional.empty());
 
         /* ========== Execucao ========== */
@@ -113,7 +132,11 @@ public class UsuarioApplicationTest {
     @Test
     void testAtualizarUsuario() {
 
-        /* ========== Montagem do cenario ========== */
+        /* ========== Montagem do cenario ==========
+           Existe um usuário cadastrado e o novo email não está em uso
+           ao atualizar os dados desse usuário
+           o sistema deve permitir a alteração normalmente
+        */
         Usuario existente = novoUsuario(1L, "u1@x.com");
         Usuario atualizado = novoUsuario(1L, "u1novo@x.com");
         atualizado.setNome("Novo Nome");
@@ -132,7 +155,11 @@ public class UsuarioApplicationTest {
     @Test
     void testAtualizarUsuario_Inexistente() {
 
-        /* ========== Montagem do cenario ========== */
+        /* ========== Montagem do cenario ==========
+           Não existe usuário com o ID informado
+           ao tentar atualizar esse cadastro
+           o sistema deve bloquear a operação com erro
+        */
         when(usuarioRepository.findById(1L)).thenReturn(Optional.empty());
 
         /* ========== Execucao ========== */
@@ -145,7 +172,11 @@ public class UsuarioApplicationTest {
     @Test
     void testAtualizarUsuario_EmailDuplicadoOutroUsuario() {
 
-        /* ========== Montagem do cenario ========== */
+         /* ========== Montagem do cenario ==========
+           O email informado já pertence a outro usuário
+           ao tentar atualizar usando esse email
+           o sistema deve impedir a alteração por duplicidade
+        */
         Usuario existente = novoUsuario(1L, "u1@x.com");
         Usuario outro = novoUsuario(2L, "u2@x.com");
         Usuario atualizado = novoUsuario(1L, "u2@x.com");
@@ -164,7 +195,11 @@ public class UsuarioApplicationTest {
     @Test
     void testAtualizarUsuario_EmailMesmoUsuarioPermitido() {
 
-        /* ========== Montagem do cenario ========== */
+        /* ========== Montagem do cenario ==========
+           O email informado já existe mas pertence ao próprio usuário
+           ao atualizar mantendo esse mesmo email
+           o sistema deve permitir a operação normalmente
+        */
         Usuario existente = novoUsuario(1L, "u1@x.com");
         Usuario atualizado = novoUsuario(1L, "u1@x.com");
 
@@ -182,7 +217,11 @@ public class UsuarioApplicationTest {
     @Test
     void testDeletarUsuario() {
 
-        /* ========== Montagem do cenario ========== */
+        /* ========== Montagem do cenario ==========
+           Existe um usuário cadastrado no sistema
+           ao solicitar a exclusão desse registro
+           o sistema deve deletar normalmente
+        */
         Usuario usuario = novoUsuario(1L, "u1@x.com");
         when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuario));
 
@@ -196,7 +235,11 @@ public class UsuarioApplicationTest {
     @Test
     void testDeletarUsuario_Inexistente() {
 
-        /* ========== Montagem do cenario ========== */
+        /* ========== Montagem do cenario ==========
+           Não existe usuário com o ID informado
+           ao tentar deletar esse registro
+           o sistema deve lançar erro e não executar o delete
+        */
         when(usuarioRepository.findById(1L)).thenReturn(Optional.empty());
 
         /* ========== Execucao ========== */
@@ -209,7 +252,11 @@ public class UsuarioApplicationTest {
     @Test
     void testCriarUsuario_ConsultaEmailAntesSalvar() {
 
-        /* ========== Montagem do cenario ========== */
+        /* ========== Montagem do cenario ==========
+           Um novo usuário está sendo criado com email válido
+           antes de salvar esse cadastro
+           o sistema deve consultar se o email já existe
+        */
         Usuario usuario = novoUsuario(1L, "consulta@x.com");
         when(usuarioRepository.findByEmail("consulta@x.com")).thenReturn(Optional.empty());
         when(usuarioRepository.save(any(Usuario.class))).thenReturn(usuario);
@@ -224,7 +271,11 @@ public class UsuarioApplicationTest {
     @Test
     void testAtualizarUsuario_ConsultaEmailAntesSalvar() {
 
-        /* ========== Montagem do cenario ========== */
+         /* ========== Montagem do cenario ==========
+           Um usuário será atualizado com um novo email
+           antes de salvar essa alteração
+           o sistema deve verificar se esse email já existe
+        */
         Usuario existente = novoUsuario(1L, "a@x.com");
         Usuario atualizado = novoUsuario(1L, "b@x.com");
         when(usuarioRepository.findById(1L)).thenReturn(Optional.of(existente));
@@ -241,7 +292,11 @@ public class UsuarioApplicationTest {
     @Test
     void testAtualizarUsuario_AtualizaCampos() {
 
-        /* ========== Montagem do cenario ========== */
+        /* ========== Montagem do cenario ==========
+           Um usuário existente terá campos específicos alterados
+           ao atualizar ativo e primeiroAcesso
+           o sistema deve persistir os novos valores corretamente
+        */
         Usuario existente = novoUsuario(1L, "a@x.com");
         Usuario atualizado = novoUsuario(1L, "b@x.com");
         atualizado.setAtivo(false);
@@ -264,7 +319,11 @@ public class UsuarioApplicationTest {
     @Test
     void testCriarUsuario_RetornaUsuarioSalvo() {
 
-        /* ========== Montagem do cenario ========== */
+        /* ========== Montagem do cenario ==========
+           A criação do usuário é válida e o save será executado
+           ao concluir essa operação
+           o sistema deve retornar o usuário salvo com os dados corretos
+        */
         Usuario usuario = novoUsuario(1L, "r@x.com");
         when(usuarioRepository.findByEmail("r@x.com")).thenReturn(Optional.empty());
         when(usuarioRepository.save(any(Usuario.class))).thenReturn(usuario);
@@ -279,7 +338,11 @@ public class UsuarioApplicationTest {
     @Test
     void testDeletarUsuario_ChamaDeleteUmaVez() {
 
-        /* ========== Montagem do cenario ========== */
+        /* ========== Montagem do cenario ==========
+           Existe um usuário válido para exclusão
+           ao executar o delete desse registro
+           o método delete deve ser chamado exatamente uma vez
+        */
         Usuario usuario = novoUsuario(1L, "d@x.com");
         when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuario));
 
@@ -293,7 +356,11 @@ public class UsuarioApplicationTest {
     @Test
     void testBuscarUsuarioPorId_MensagemComId() {
 
-        /* ========== Montagem do cenario ========== */
+        /* ========== Montagem do cenario ==========
+           Não existe nenhum usuário com o ID informado
+           ao tentar buscar esse registro específico
+           a mensagem de erro deve exibir o ID corretamente
+        */
         when(usuarioRepository.findById(123L)).thenReturn(Optional.empty());
 
         /* ========== Execucao ========== */
@@ -306,7 +373,11 @@ public class UsuarioApplicationTest {
     @Test
     void testCriarUsuario_RepositorioRetornaMesmoObjeto() {
 
-        /* ========== Montagem do cenario ========== */
+        /* ========== Montagem do cenario ==========
+           O repositório retorna o mesmo objeto recebido no save
+           ao finalizar a criação do usuário
+           o sistema deve devolver esse mesmo objeto sem alterações
+        */
         Usuario usuario = novoUsuario(8L, "mesmo@x.com");
         when(usuarioRepository.findByEmail("mesmo@x.com")).thenReturn(Optional.empty());
         when(usuarioRepository.save(any(Usuario.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -321,7 +392,11 @@ public class UsuarioApplicationTest {
     @Test
     void testAtualizarUsuario_RepositorioRetornaAlterado() {
 
-        /* ========== Montagem do cenario ========== */
+         /* ========== Montagem do cenario ==========
+           Um usuário existente será atualizado com novo email válido
+           ao concluir essa atualização
+           o sistema deve retornar o usuário com os dados alterados
+        */
         Usuario existente = novoUsuario(1L, "a@x.com");
         Usuario atualizado = novoUsuario(1L, "novo@x.com");
         when(usuarioRepository.findById(1L)).thenReturn(Optional.of(existente));
@@ -338,7 +413,11 @@ public class UsuarioApplicationTest {
     @Test
     void testListarTodosUsuarios_ListaVazia() {
 
-        /* ========== Montagem do cenario ========== */
+        /* ========== Montagem do cenario ==========
+           Não existe nenhum usuário cadastrado no sistema
+           ao solicitar a listagem
+           o sistema deve retornar uma lista vazia
+        */
         when(usuarioRepository.findAll()).thenReturn(List.of());
 
         /* ========== Execucao ========== */
