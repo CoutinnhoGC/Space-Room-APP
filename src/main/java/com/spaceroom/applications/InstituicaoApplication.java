@@ -13,8 +13,10 @@ import java.util.List;
 public class InstituicaoApplication {
 
     private final InstituicaoRepository instituicaoRepository;
+    private final AutorizacaoApplication autorizacaoApplication;
 
     public Instituicao criar(Instituicao instituicao) {
+        autorizacaoApplication.validarCriacaoInstituicao();
         return instituicaoRepository.save(instituicao);
     }
 
@@ -30,6 +32,7 @@ public class InstituicaoApplication {
     }
 
     public Instituicao atualizar(Long idInstituicao, Instituicao dadosAtualizados) {
+        autorizacaoApplication.validarAcessoInstituicao(idInstituicao);
         Instituicao instituicaoExistente = buscarPorId(idInstituicao);
 
         instituicaoExistente.setIdPlano(dadosAtualizados.getIdPlano());
@@ -51,6 +54,7 @@ public class InstituicaoApplication {
     }
 
     public void deletar(Long idInstituicao) {
+        autorizacaoApplication.validarCriacaoInstituicao();
         Instituicao instituicao = buscarPorId(idInstituicao);
         instituicaoRepository.delete(instituicao);
     }

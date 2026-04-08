@@ -14,8 +14,10 @@ import java.util.List;
 public class ReservaApplication {
 
     private final ReservaRepository reservaRepository;
+    private final AutorizacaoApplication autorizacaoApplication;
 
     public Reserva criar(Reserva reserva) {
+        autorizacaoApplication.validarCriacaoOuEdicaoReserva(reserva);
         validarDatas(reserva);
         validarConflitoHorario(reserva);
         return reservaRepository.save(reserva);
@@ -28,11 +30,12 @@ public class ReservaApplication {
     public Reserva buscarPorId(Long idReserva) {
         return reservaRepository.findById(idReserva)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Reserva não encontrada para o id: " + idReserva
+                        "Reserva nao encontrada para o id: " + idReserva
                 ));
     }
 
     public Reserva atualizar(Long idReserva, Reserva dadosAtualizados) {
+        autorizacaoApplication.validarCriacaoOuEdicaoReserva(dadosAtualizados);
         Reserva reservaExistente = buscarPorId(idReserva);
 
         validarDatas(dadosAtualizados);
@@ -58,11 +61,11 @@ public class ReservaApplication {
 
     private void validarDatas(Reserva reserva) {
         if (reserva.getDataInicio() == null || reserva.getDataFim() == null) {
-            throw new BusinessException("Data de início e data de fim são obrigatórias.");
+            throw new BusinessException("Data de inicio e data de fim sao obrigatorias.");
         }
 
         if (!reserva.getDataFim().isAfter(reserva.getDataInicio())) {
-            throw new BusinessException("A data fim deve ser maior que a data início.");
+            throw new BusinessException("A data fim deve ser maior que a data inicio.");
         }
     }
 
@@ -75,7 +78,7 @@ public class ReservaApplication {
                 );
 
         if (existeConflito) {
-            throw new BusinessException("Já existe uma reserva para este espaço nesse intervalo.");
+            throw new BusinessException("Ja existe uma reserva para este espaco nesse intervalo.");
         }
     }
 
@@ -90,7 +93,7 @@ public class ReservaApplication {
                 );
 
         if (existeConflito) {
-            throw new BusinessException("Já existe uma reserva para este espaço nesse intervalo.");
+            throw new BusinessException("Ja existe uma reserva para este espaco nesse intervalo.");
         }
     }
 }

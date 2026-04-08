@@ -1,6 +1,7 @@
 package com.spaceroom.models;
 
 import com.spaceroom.entities.TipoInstituicao;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -20,7 +21,10 @@ public class InstituicaoModel {
 
     private String razaoSocial;
     private String cnpj;
+
+    @Email(message = "Informe um e-mail de instituicao valido.")
     private String email;
+
     private String telefone;
     private String responsavel;
     private String endereco;

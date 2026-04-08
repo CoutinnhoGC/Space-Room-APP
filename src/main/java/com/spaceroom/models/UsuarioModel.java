@@ -1,5 +1,6 @@
 package com.spaceroom.models;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -23,6 +24,7 @@ public class UsuarioModel {
     private String nome;
 
     @NotBlank(message = "O email e obrigatorio.")
+    @Email(message = "Informe um e-mail valido.")
     private String email;
 
     private String senhaHash;
@@ -36,6 +38,10 @@ public class UsuarioModel {
     private LocalDateTime ultimoLoginEm;
 
     private Boolean ativo;
+
+    private Boolean podeReservar;
+
+    private Boolean adminPlataforma;
 
     private LocalDateTime criadoEm;
     private LocalDateTime atualizadoEm;

@@ -4,20 +4,39 @@ import com.spaceroom.entities.Usuario;
 import com.spaceroom.exceptions.BusinessException;
 import com.spaceroom.exceptions.ResourceNotFoundException;
 import com.spaceroom.repositories.UsuarioRepository;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Locale;
 
 @Service
-@RequiredArgsConstructor
 public class UsuarioApplication {
 
     private final UsuarioRepository usuarioRepository;
+    private final AutorizacaoApplication autorizacaoApplication;
+
+    @Autowired
+    public UsuarioApplication(UsuarioRepository usuarioRepository, AutorizacaoApplication autorizacaoApplication) {
+        this.usuarioRepository = usuarioRepository;
+        this.autorizacaoApplication = autorizacaoApplication;
+    }
+
+    public UsuarioApplication(UsuarioRepository usuarioRepository) {
+        this(usuarioRepository, null);
+    }
 
     public Usuario criar(Usuario usuario) {
-        validarEmailDuplicado(usuario.getEmail(), null);
-        return usuarioRepository.save(usuario);
+        return criar(usuario, null);
+    }
+
+    public Usuario criar(Usuario usuario, Boolean podeReservar) {
+        String emailNormalizado = normalizarEmail(usuario.getEmail());
+        usuario.setEmail(emailNormalizado);
+        validarEmailDuplicado(emailNormalizado, null);
+        Usuario usuarioSalvo = usuarioRepository.save(usuario);
+        sincronizarPermissaoReserva(usuarioSalvo, podeReservar);
+        return usuarioRepository.findById(usuarioSalvo.getIdUsuario()).orElse(usuarioSalvo);
     }
 
     public List<Usuario> listarTodos() {
@@ -32,14 +51,19 @@ public class UsuarioApplication {
     }
 
     public Usuario atualizar(Long idUsuario, Usuario dadosAtualizados) {
-        Usuario usuarioExistente = buscarPorId(idUsuario);
+        return atualizar(idUsuario, dadosAtualizados, null);
+    }
 
-        validarEmailDuplicado(dadosAtualizados.getEmail(), idUsuario);
+    public Usuario atualizar(Long idUsuario, Usuario dadosAtualizados, Boolean podeReservar) {
+        Usuario usuarioExistente = buscarPorId(idUsuario);
+        String emailNormalizado = normalizarEmail(dadosAtualizados.getEmail());
+
+        validarEmailDuplicado(emailNormalizado, idUsuario);
 
         usuarioExistente.setIdInstituicao(dadosAtualizados.getIdInstituicao());
         usuarioExistente.setIdCargo(dadosAtualizados.getIdCargo());
         usuarioExistente.setNome(dadosAtualizados.getNome());
-        usuarioExistente.setEmail(dadosAtualizados.getEmail());
+        usuarioExistente.setEmail(emailNormalizado);
         usuarioExistente.setSenhaHash(dadosAtualizados.getSenhaHash());
         usuarioExistente.setPrimeiroAcesso(dadosAtualizados.getPrimeiroAcesso());
         usuarioExistente.setTokenDefinicaoSenha(dadosAtualizados.getTokenDefinicaoSenha());
@@ -47,7 +71,9 @@ public class UsuarioApplication {
         usuarioExistente.setUltimoLoginEm(dadosAtualizados.getUltimoLoginEm());
         usuarioExistente.setAtivo(dadosAtualizados.getAtivo());
 
-        return usuarioRepository.save(usuarioExistente);
+        Usuario usuarioAtualizado = usuarioRepository.save(usuarioExistente);
+        sincronizarPermissaoReserva(usuarioAtualizado, podeReservar);
+        return usuarioRepository.findById(usuarioAtualizado.getIdUsuario()).orElse(usuarioAtualizado);
     }
 
     public void deletar(Long idUsuario) {
@@ -62,5 +88,21 @@ public class UsuarioApplication {
                 throw new BusinessException("Ja existe usuario cadastrado com o email informado.");
             }
         });
+    }
+
+    private void sincronizarPermissaoReserva(Usuario usuario, Boolean podeReservar) {
+        if (autorizacaoApplication == null) {
+            return;
+        }
+
+        autorizacaoApplication.sincronizarPermissaoReserva(usuario, podeReservar);
+    }
+
+    private String normalizarEmail(String email) {
+        if (email == null) {
+            return null;
+        }
+
+        return email.trim().toLowerCase(Locale.ROOT);
     }
 }

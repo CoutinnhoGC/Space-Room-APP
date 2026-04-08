@@ -1,5 +1,6 @@
 package com.spaceroom.facades;
 
+import com.spaceroom.applications.AutorizacaoApplication;
 import com.spaceroom.applications.UsuarioApplication;
 import com.spaceroom.entities.Usuario;
 import com.spaceroom.models.UsuarioModel;
@@ -13,10 +14,11 @@ import java.util.List;
 public class UsuarioFacade {
 
     private final UsuarioApplication usuarioApplication;
+    private final AutorizacaoApplication autorizacaoApplication;
 
     public UsuarioModel criar(UsuarioModel model) {
         Usuario usuario = converterModelParaEntity(model);
-        Usuario usuarioSalvo = usuarioApplication.criar(usuario);
+        Usuario usuarioSalvo = usuarioApplication.criar(usuario, model.getPodeReservar());
         return converterEntityParaModel(usuarioSalvo);
     }
 
@@ -34,7 +36,7 @@ public class UsuarioFacade {
 
     public UsuarioModel atualizar(Long idUsuario, UsuarioModel model) {
         Usuario usuario = converterModelParaEntity(model);
-        Usuario usuarioAtualizado = usuarioApplication.atualizar(idUsuario, usuario);
+        Usuario usuarioAtualizado = usuarioApplication.atualizar(idUsuario, usuario, model.getPodeReservar());
         return converterEntityParaModel(usuarioAtualizado);
     }
 
@@ -73,6 +75,8 @@ public class UsuarioFacade {
         model.setTokenExpiracao(usuario.getTokenExpiracao());
         model.setUltimoLoginEm(usuario.getUltimoLoginEm());
         model.setAtivo(usuario.getAtivo());
+        model.setPodeReservar(autorizacaoApplication.resolverPodeReservar(usuario, null));
+        model.setAdminPlataforma(autorizacaoApplication.resolverAdminPlataforma(usuario));
         model.setCriadoEm(usuario.getCriadoEm());
         model.setAtualizadoEm(usuario.getAtualizadoEm());
         return model;
