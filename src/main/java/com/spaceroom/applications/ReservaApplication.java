@@ -4,20 +4,29 @@ import com.spaceroom.entities.Reserva;
 import com.spaceroom.exceptions.BusinessException;
 import com.spaceroom.exceptions.ResourceNotFoundException;
 import com.spaceroom.repositories.ReservaRepository;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class ReservaApplication {
 
     private final ReservaRepository reservaRepository;
     private final AutorizacaoApplication autorizacaoApplication;
 
+    @Autowired
+    public ReservaApplication(ReservaRepository reservaRepository, AutorizacaoApplication autorizacaoApplication) {
+        this.reservaRepository = reservaRepository;
+        this.autorizacaoApplication = autorizacaoApplication;
+    }
+
+    public ReservaApplication(ReservaRepository reservaRepository) {
+        this(reservaRepository, null);
+    }
+
     public Reserva criar(Reserva reserva) {
-        autorizacaoApplication.validarCriacaoOuEdicaoReserva(reserva);
+        validarAutorizacao(reserva);
         validarDatas(reserva);
         validarConflitoHorario(reserva);
         return reservaRepository.save(reserva);
@@ -35,7 +44,7 @@ public class ReservaApplication {
     }
 
     public Reserva atualizar(Long idReserva, Reserva dadosAtualizados) {
-        autorizacaoApplication.validarCriacaoOuEdicaoReserva(dadosAtualizados);
+        validarAutorizacao(dadosAtualizados);
         Reserva reservaExistente = buscarPorId(idReserva);
 
         validarDatas(dadosAtualizados);
@@ -95,5 +104,13 @@ public class ReservaApplication {
         if (existeConflito) {
             throw new BusinessException("Ja existe uma reserva para este espaco nesse intervalo.");
         }
+    }
+
+    private void validarAutorizacao(Reserva reserva) {
+        if (autorizacaoApplication == null) {
+            return;
+        }
+
+        autorizacaoApplication.validarCriacaoOuEdicaoReserva(reserva);
     }
 }
