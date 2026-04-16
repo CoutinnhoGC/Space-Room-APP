@@ -29,7 +29,11 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleValidation(MethodArgumentNotValidException ex) {
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
         problem.setTitle("Erro de validação");
-        problem.setDetail("Verifique os campos enviados.");
+        String detail = ex.getBindingResult().getFieldErrors().stream()
+                .findFirst()
+                .map(error -> error.getDefaultMessage() == null ? "Verifique os campos enviados." : error.getDefaultMessage())
+                .orElse("Verifique os campos enviados.");
+        problem.setDetail(detail);
         return problem;
     }
 
@@ -37,7 +41,7 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleGeneric(Exception ex) {
         ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
         problem.setTitle("Erro interno");
-        problem.setDetail(ex.getMessage());
+        problem.setDetail("Não foi possível concluir a operação agora. Tente novamente.");
         return problem;
     }
 }

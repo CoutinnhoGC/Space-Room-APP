@@ -27,6 +27,7 @@ public class ReservaApplication {
 
     public Reserva criar(Reserva reserva) {
         validarAutorizacao(reserva);
+        validarCamposObrigatorios(reserva);
         validarDatas(reserva);
         validarConflitoHorario(reserva);
         return reservaRepository.save(reserva);
@@ -39,7 +40,7 @@ public class ReservaApplication {
     public Reserva buscarPorId(Long idReserva) {
         return reservaRepository.findById(idReserva)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Reserva nao encontrada para o id: " + idReserva
+                        "Reserva não encontrada para o id: " + idReserva
                 ));
     }
 
@@ -47,6 +48,7 @@ public class ReservaApplication {
         validarAutorizacao(dadosAtualizados);
         Reserva reservaExistente = buscarPorId(idReserva);
 
+        validarCamposObrigatorios(dadosAtualizados);
         validarDatas(dadosAtualizados);
         validarConflitoHorarioAtualizacao(idReserva, dadosAtualizados);
 
@@ -68,13 +70,23 @@ public class ReservaApplication {
         reservaRepository.delete(reserva);
     }
 
+    private void validarCamposObrigatorios(Reserva reserva) {
+        if (reserva.getTitulo() == null || reserva.getTitulo().isBlank()) {
+            throw new BusinessException("O título é obrigatório.");
+        }
+
+        if (reserva.getFinalidade() == null || reserva.getFinalidade().isBlank()) {
+            throw new BusinessException("A finalidade é obrigatória.");
+        }
+    }
+
     private void validarDatas(Reserva reserva) {
         if (reserva.getDataInicio() == null || reserva.getDataFim() == null) {
-            throw new BusinessException("Data de inicio e data de fim sao obrigatorias.");
+            throw new BusinessException("Data de início e data de fim são obrigatórias.");
         }
 
         if (!reserva.getDataFim().isAfter(reserva.getDataInicio())) {
-            throw new BusinessException("A data fim deve ser maior que a data inicio.");
+            throw new BusinessException("A data fim deve ser maior que a data início.");
         }
     }
 
@@ -87,7 +99,7 @@ public class ReservaApplication {
                 );
 
         if (existeConflito) {
-            throw new BusinessException("Ja existe uma reserva para este espaco nesse intervalo.");
+            throw new BusinessException("Já existe uma reserva para este espaço nesse intervalo.");
         }
     }
 
@@ -96,13 +108,10 @@ public class ReservaApplication {
 
         boolean existeConflito = reservasMesmoEspaco.stream()
                 .filter(item -> !item.getIdReserva().equals(idReserva))
-                .anyMatch(item ->
-                        reserva.getDataInicio().isBefore(item.getDataFim()) &&
-                                reserva.getDataFim().isAfter(item.getDataInicio())
-                );
+                .anyMatch(item -> reserva.getDataInicio().isBefore(item.getDataFim()) && reserva.getDataFim().isAfter(item.getDataInicio()));
 
         if (existeConflito) {
-            throw new BusinessException("Ja existe uma reserva para este espaco nesse intervalo.");
+            throw new BusinessException("Já existe uma reserva para este espaço nesse intervalo.");
         }
     }
 

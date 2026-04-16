@@ -3,6 +3,7 @@ package com.spaceroom.models;
 import com.spaceroom.entities.StatusReserva;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -24,8 +25,11 @@ public class ReservaModel {
     private Long idEspaco;
 
     @NotBlank(message = "O título é obrigatório.")
+    @Size(max = 150, message = "O título deve ter no máximo 150 caracteres.")
     private String titulo;
 
+    @NotBlank(message = "A finalidade é obrigatória.")
+    @Size(max = 500, message = "A finalidade deve ter no máximo 500 caracteres.")
     private String finalidade;
 
     @NotNull(message = "A data de início é obrigatória.")
@@ -36,6 +40,7 @@ public class ReservaModel {
 
     private StatusReserva status;
 
+    @Size(max = 500, message = "A observação deve ter no máximo 500 caracteres.")
     private String observacao;
 
     private LocalDateTime criadoEm;
