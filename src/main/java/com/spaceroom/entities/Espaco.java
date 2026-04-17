@@ -63,7 +63,7 @@ public class Espaco {
     @Column(name = "imagem_url", columnDefinition = "TEXT")
     private String imagemUrl;
 
-    @Column(name = "permite_subespacos", nullable = false)
+    @Column(name = "permite_subespacos")
     private Boolean permiteSubespacos;
 
     @Column(name = "ativo", nullable = false)
