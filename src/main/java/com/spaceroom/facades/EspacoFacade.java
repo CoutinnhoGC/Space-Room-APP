@@ -46,6 +46,7 @@ public class EspacoFacade {
         return Espaco.builder()
                 .idEspaco(model.getIdEspaco())
                 .idInstituicao(model.getIdInstituicao())
+                .idEspacoPai(model.getIdEspacoPai())
                 .nome(model.getNome())
                 .descricao(model.getDescricao())
                 .tipo(model.getTipo())
@@ -53,6 +54,7 @@ public class EspacoFacade {
                 .capacidade(model.getCapacidade())
                 .recursosFixos(model.getRecursosFixos())
                 .imagemUrl(model.getImagemUrl())
+                .permiteSubespacos(model.getPermiteSubespacos())
                 .ativo(model.getAtivo())
                 .criadoEm(model.getCriadoEm())
                 .atualizadoEm(model.getAtualizadoEm())
@@ -63,6 +65,7 @@ public class EspacoFacade {
         EspacoModel model = new EspacoModel();
         model.setIdEspaco(espaco.getIdEspaco());
         model.setIdInstituicao(espaco.getIdInstituicao());
+        model.setIdEspacoPai(espaco.getIdEspacoPai());
         model.setNome(espaco.getNome());
         model.setDescricao(espaco.getDescricao());
         model.setTipo(espaco.getTipo());
@@ -70,6 +73,7 @@ public class EspacoFacade {
         model.setCapacidade(espaco.getCapacidade());
         model.setRecursosFixos(espaco.getRecursosFixos());
         model.setImagemUrl(espaco.getImagemUrl());
+        model.setPermiteSubespacos(espaco.getPermiteSubespacos());
         model.setAtivo(espaco.getAtivo());
         model.setCriadoEm(espaco.getCriadoEm());
         model.setAtualizadoEm(espaco.getAtualizadoEm());

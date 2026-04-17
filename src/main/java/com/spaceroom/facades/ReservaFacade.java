@@ -49,6 +49,7 @@ public class ReservaFacade {
                 .idInstituicao(model.getIdInstituicao())
                 .idUsuario(model.getIdUsuario())
                 .idEspaco(model.getIdEspaco())
+                .idSubespaco(model.getIdSubespaco())
                 .titulo(model.getTitulo())
                 .finalidade(model.getFinalidade())
                 .dataInicio(model.getDataInicio())
@@ -66,6 +67,7 @@ public class ReservaFacade {
         model.setIdInstituicao(reserva.getIdInstituicao());
         model.setIdUsuario(reserva.getIdUsuario());
         model.setIdEspaco(reserva.getIdEspaco());
+        model.setIdSubespaco(reserva.getIdSubespaco());
         model.setTitulo(reserva.getTitulo());
         model.setFinalidade(reserva.getFinalidade());
         model.setDataInicio(reserva.getDataInicio());

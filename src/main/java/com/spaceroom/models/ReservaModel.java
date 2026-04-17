@@ -24,6 +24,8 @@ public class ReservaModel {
     @NotNull(message = "O id do espaço é obrigatório.")
     private Long idEspaco;
 
+    private Long idSubespaco;
+
     @NotBlank(message = "O título é obrigatório.")
     @Size(max = 150, message = "O título deve ter no máximo 150 caracteres.")
     private String titulo;

@@ -37,6 +37,9 @@ public class Espaco {
     @Column(name = "id_instituicao", nullable = false)
     private Long idInstituicao;
 
+    @Column(name = "id_espaco_pai")
+    private Long idEspacoPai;
+
     @Column(name = "nome", nullable = false)
     private String nome;
 
@@ -60,6 +63,9 @@ public class Espaco {
     @Column(name = "imagem_url", columnDefinition = "TEXT")
     private String imagemUrl;
 
+    @Column(name = "permite_subespacos", nullable = false)
+    private Boolean permiteSubespacos;
+
     @Column(name = "ativo", nullable = false)
     private Boolean ativo;
 
@@ -77,6 +83,10 @@ public class Espaco {
 
         if (this.ativo == null) {
             this.ativo = true;
+        }
+
+        if (this.permiteSubespacos == null) {
+            this.permiteSubespacos = false;
         }
     }
 

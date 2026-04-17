@@ -18,6 +18,8 @@ public class EspacoModel {
     @NotNull(message = "O id da instituição é obrigatório.")
     private Long idInstituicao;
 
+    private Long idEspacoPai;
+
     @NotBlank(message = "O nome é obrigatório.")
     @Size(max = 120, message = "O nome deve ter no máximo 120 caracteres.")
     private String nome;
@@ -40,6 +42,7 @@ public class EspacoModel {
     @Size(max = 500, message = "A URL da imagem deve ter no máximo 500 caracteres.")
     private String imagemUrl;
 
+    private Boolean permiteSubespacos;
     private Boolean ativo;
     private LocalDateTime criadoEm;
     private LocalDateTime atualizadoEm;
