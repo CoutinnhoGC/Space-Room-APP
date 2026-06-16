@@ -8,18 +8,26 @@ import com.spaceroom.exceptions.BusinessException;
 import com.spaceroom.exceptions.ResourceNotFoundException;
 import com.spaceroom.repositories.EspacoRepository;
 import com.spaceroom.repositories.ReservaRepository;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class ReservaApplication {
 
     private final ReservaRepository reservaRepository;
     private final EspacoRepository espacoRepository;
     private final AutorizacaoApplication autorizacaoApplication;
+
+    @Autowired
+    public ReservaApplication(ReservaRepository reservaRepository,
+                              EspacoRepository espacoRepository,
+                              AutorizacaoApplication autorizacaoApplication) {
+        this.reservaRepository = reservaRepository;
+        this.espacoRepository = espacoRepository;
+        this.autorizacaoApplication = autorizacaoApplication;
+    }
 
     public ReservaApplication(ReservaRepository reservaRepository) {
         this(reservaRepository, null, null);
