@@ -54,7 +54,10 @@ public class EspacoFacade {
                 .capacidade(model.getCapacidade())
                 .recursosFixos(model.getRecursosFixos())
                 .imagemUrl(model.getImagemUrl())
+                .codigoUnidade(model.getCodigoUnidade())
                 .permiteSubespacos(model.getPermiteSubespacos())
+                .exigeAprovacao(model.getExigeAprovacao())
+                .idResponsavelEspaco(model.getIdResponsavelEspaco())
                 .ativo(model.getAtivo())
                 .criadoEm(model.getCriadoEm())
                 .atualizadoEm(model.getAtualizadoEm())
@@ -73,7 +76,10 @@ public class EspacoFacade {
         model.setCapacidade(espaco.getCapacidade());
         model.setRecursosFixos(espaco.getRecursosFixos());
         model.setImagemUrl(espaco.getImagemUrl());
+        model.setCodigoUnidade(espaco.getCodigoUnidade());
         model.setPermiteSubespacos(espaco.getPermiteSubespacos());
+        model.setExigeAprovacao(espaco.getExigeAprovacao());
+        model.setIdResponsavelEspaco(espaco.getIdResponsavelEspaco());
         model.setAtivo(espaco.getAtivo());
         model.setCriadoEm(espaco.getCriadoEm());
         model.setAtualizadoEm(espaco.getAtualizadoEm());

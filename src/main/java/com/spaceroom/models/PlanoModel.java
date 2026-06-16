@@ -25,6 +25,10 @@ public class PlanoModel {
     private Integer limiteEspacos;
     private Integer limiteReservasMes;
     private Boolean vitrineIncluida;
+    private Boolean multiunidadeHabilitada;
+    private Boolean workflowAprovacaoHabilitado;
+    private Boolean auditoriaAvancadaHabilitada;
+    private String modulosHabilitados;
     private Boolean ativo;
     private LocalDateTime criadoEm;
 }

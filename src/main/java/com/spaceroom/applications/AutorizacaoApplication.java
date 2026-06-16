@@ -1,17 +1,14 @@
 package com.spaceroom.applications;
 
 import com.spaceroom.config.PermissionCodes;
-import com.spaceroom.entities.Cargo;
+import com.spaceroom.entities.CargoPermissao;
 import com.spaceroom.entities.Espaco;
-import com.spaceroom.entities.Instituicao;
 import com.spaceroom.entities.Permissao;
 import com.spaceroom.entities.Reserva;
-import com.spaceroom.entities.TipoInstituicao;
 import com.spaceroom.entities.Usuario;
 import com.spaceroom.entities.UsuarioPermissao;
 import com.spaceroom.exceptions.BusinessException;
-import com.spaceroom.repositories.CargoRepository;
-import com.spaceroom.repositories.InstituicaoRepository;
+import com.spaceroom.repositories.CargoPermissaoRepository;
 import com.spaceroom.repositories.PermissaoRepository;
 import com.spaceroom.repositories.UsuarioPermissaoRepository;
 import com.spaceroom.repositories.UsuarioRepository;
@@ -21,47 +18,15 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.text.Normalizer;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 public class AutorizacaoApplication {
 
-    private static final Set<String> CARGOS_ESCOLA_COM_RESERVA = Set.of(
-            "diretor",
-            "diretora",
-            "vice diretor",
-            "vice diretora",
-            "vice-diretor",
-            "vice-diretora",
-            "docente",
-            "professor",
-            "professora",
-            "coordenador",
-            "coordenadora"
-    );
-
-    private static final Set<String> CARGOS_EMPRESA_COM_RESERVA = Set.of(
-            "dono",
-            "dona",
-            "proprietario",
-            "proprietaria",
-            "socio",
-            "socia",
-            "gerente",
-            "gestor",
-            "gestora",
-            "administrador",
-            "administradora"
-    );
-
     private final UsuarioRepository usuarioRepository;
-    private final InstituicaoRepository instituicaoRepository;
-    private final CargoRepository cargoRepository;
+    private final CargoPermissaoRepository cargoPermissaoRepository;
     private final PermissaoRepository permissaoRepository;
     private final UsuarioPermissaoRepository usuarioPermissaoRepository;
 
@@ -76,17 +41,45 @@ public class AutorizacaoApplication {
     }
 
     public boolean isAdminPlataforma(Usuario usuario) {
-        return buscarPermissaoUsuario(usuario.getIdUsuario(), PermissionCodes.GERENCIAR_INSTITUICOES)
-                .orElse(false);
+        return possuiPermissao(usuario, PermissionCodes.GERENCIAR_INSTITUICOES);
     }
 
     public boolean podeReservar(Usuario usuario) {
-        Optional<Boolean> permissaoExplicita = buscarPermissaoUsuario(usuario.getIdUsuario(), PermissionCodes.RESERVAR_ESPACO);
-        if (permissaoExplicita.isPresent()) {
-            return permissaoExplicita.get();
+        return possuiPermissao(usuario, PermissionCodes.RESERVAR_ESPACO);
+    }
+
+    public boolean podeGerenciarUsuarios(Usuario usuario) {
+        return possuiPermissao(usuario, PermissionCodes.GERENCIAR_USUARIOS);
+    }
+
+    public boolean podeGerenciarEspacos(Usuario usuario) {
+        return possuiPermissao(usuario, PermissionCodes.GERENCIAR_ESPACOS);
+    }
+
+    public boolean podeAprovarReservas(Usuario usuario) {
+        return possuiPermissao(usuario, PermissionCodes.APROVAR_RESERVAS);
+    }
+
+    public boolean podeGerenciarComunicados(Usuario usuario) {
+        return possuiPermissao(usuario, PermissionCodes.GERENCIAR_COMUNICADOS);
+    }
+
+    public boolean podeVisualizarAuditoria(Usuario usuario) {
+        return possuiPermissao(usuario, PermissionCodes.VISUALIZAR_AUDITORIA);
+    }
+
+    public boolean podeAprovarReservaNoEspaco(Usuario usuario, Espaco espaco) {
+        if (usuario == null) {
+            return false;
         }
 
-        return calcularPermissaoPadraoReserva(usuario);
+        if (isAdminPlataforma(usuario) || podeAprovarReservas(usuario)) {
+            return true;
+        }
+
+        return espaco != null
+                && espaco.getIdResponsavelEspaco() != null
+                && espaco.getIdResponsavelEspaco().equals(usuario.getIdUsuario());
     }
 
     public void validarCriacaoInstituicao() {
@@ -160,24 +153,18 @@ public class AutorizacaoApplication {
             return;
         }
 
-        boolean padraoCargo = calcularPermissaoPadraoReserva(usuario);
+        boolean padraoCargo = buscarPermissaoCargo(usuario.getIdCargo(), PermissionCodes.RESERVAR_ESPACO)
+                .orElse(false);
         sincronizarPermissaoUsuario(usuario.getIdUsuario(), PermissionCodes.RESERVAR_ESPACO, valorSolicitado, padraoCargo);
     }
 
-    private boolean calcularPermissaoPadraoReserva(Usuario usuario) {
-        Instituicao instituicao = instituicaoRepository.findById(usuario.getIdInstituicao()).orElse(null);
-        Cargo cargo = cargoRepository.findById(usuario.getIdCargo()).orElse(null);
-
-        if (instituicao == null || cargo == null || cargo.getNome() == null) {
-            return false;
+    private boolean possuiPermissao(Usuario usuario, String nomePermissao) {
+        Optional<Boolean> permissaoExplicita = buscarPermissaoUsuario(usuario.getIdUsuario(), nomePermissao);
+        if (permissaoExplicita.isPresent()) {
+            return permissaoExplicita.get();
         }
 
-        String nomeCargoNormalizado = normalizar(cargo.getNome());
-        Set<String> cargosPermitidos = usaRegrasEscolares(instituicao.getTipo())
-                ? CARGOS_ESCOLA_COM_RESERVA
-                : CARGOS_EMPRESA_COM_RESERVA;
-
-        return cargosPermitidos.contains(nomeCargoNormalizado);
+        return buscarPermissaoCargo(usuario.getIdCargo(), nomePermissao).orElse(false);
     }
 
     private Optional<Boolean> buscarPermissaoUsuario(Long idUsuario, String nomePermissao) {
@@ -191,6 +178,23 @@ public class AutorizacaoApplication {
                 .filter(item -> item.getIdPermissao().equals(permissao.get().getIdPermissao()))
                 .map(UsuarioPermissao::getConcedida)
                 .findFirst();
+    }
+
+    private Optional<Boolean> buscarPermissaoCargo(Integer idCargo, String nomePermissao) {
+        if (idCargo == null) {
+            return Optional.empty();
+        }
+
+        Optional<Permissao> permissao = permissaoRepository.findByNome(nomePermissao);
+        if (permissao.isEmpty()) {
+            return Optional.empty();
+        }
+
+        List<CargoPermissao> permissoes = cargoPermissaoRepository.findByIdCargo(idCargo);
+        return permissoes.stream()
+                .anyMatch(item -> item.getIdPermissao().equals(permissao.get().getIdPermissao()))
+                ? Optional.of(true)
+                : Optional.empty();
     }
 
     private void sincronizarPermissaoUsuario(Long idUsuario, String nomePermissao, boolean valorSolicitado, boolean valorPadrao) {
@@ -213,17 +217,5 @@ public class AutorizacaoApplication {
                 .build());
         usuarioPermissao.setConcedida(valorSolicitado);
         usuarioPermissaoRepository.save(usuarioPermissao);
-    }
-
-    private boolean usaRegrasEscolares(TipoInstituicao tipoInstituicao) {
-        return tipoInstituicao == TipoInstituicao.ESCOLA
-                || tipoInstituicao == TipoInstituicao.FACULDADE
-                || tipoInstituicao == TipoInstituicao.UNIVERSIDADE
-                || tipoInstituicao == TipoInstituicao.SENAI;
-    }
-
-    private String normalizar(String valor) {
-        String semAcento = Normalizer.normalize(valor, Normalizer.Form.NFD).replaceAll("\\p{M}", "");
-        return semAcento.toLowerCase(Locale.ROOT).trim().replaceAll("\\s+", " ");
     }
 }

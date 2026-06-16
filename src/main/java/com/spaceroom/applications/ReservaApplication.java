@@ -11,6 +11,7 @@ import com.spaceroom.repositories.ReservaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -37,7 +38,8 @@ public class ReservaApplication {
         validarAutorizacao(reserva);
         validarCamposObrigatorios(reserva);
         validarDatas(reserva);
-        validarSubespaco(reserva);
+        Espaco espacoPrincipal = validarSubespaco(reserva);
+        aplicarPoliticaAprovacaoCriacao(reserva, espacoPrincipal);
         validarConflitoHorario(reserva);
         return reservaRepository.save(reserva);
     }
@@ -55,7 +57,7 @@ public class ReservaApplication {
 
     public Reserva buscarPorId(Long idReserva) {
         Reserva reserva = reservaRepository.findById(idReserva)
-                .orElseThrow(() -> new ResourceNotFoundException("Reserva não encontrada para o id: " + idReserva));
+                .orElseThrow(() -> new ResourceNotFoundException("Reserva nao encontrada para o id: " + idReserva));
         if (autorizacaoApplication != null) {
             autorizacaoApplication.validarAcessoReserva(reserva);
         }
@@ -68,7 +70,7 @@ public class ReservaApplication {
 
         validarCamposObrigatorios(dadosAtualizados);
         validarDatas(dadosAtualizados);
-        validarSubespaco(dadosAtualizados);
+        Espaco espacoPrincipal = validarSubespaco(dadosAtualizados);
         validarConflitoHorarioAtualizacao(idReserva, dadosAtualizados);
 
         reservaExistente.setIdInstituicao(dadosAtualizados.getIdInstituicao());
@@ -79,8 +81,9 @@ public class ReservaApplication {
         reservaExistente.setFinalidade(dadosAtualizados.getFinalidade());
         reservaExistente.setDataInicio(dadosAtualizados.getDataInicio());
         reservaExistente.setDataFim(dadosAtualizados.getDataFim());
-        reservaExistente.setStatus(dadosAtualizados.getStatus());
         reservaExistente.setObservacao(dadosAtualizados.getObservacao());
+
+        aplicarPoliticaAprovacaoAtualizacao(reservaExistente, dadosAtualizados, espacoPrincipal);
 
         return reservaRepository.save(reservaExistente);
     }
@@ -92,50 +95,52 @@ public class ReservaApplication {
 
     private void validarCamposObrigatorios(Reserva reserva) {
         if (reserva.getTitulo() == null || reserva.getTitulo().isBlank()) {
-            throw new BusinessException("O título é obrigatório.");
+            throw new BusinessException("O titulo e obrigatorio.");
         }
 
         if (reserva.getFinalidade() == null || reserva.getFinalidade().isBlank()) {
-            throw new BusinessException("A finalidade é obrigatória.");
+            throw new BusinessException("A finalidade e obrigatoria.");
         }
     }
 
     private void validarDatas(Reserva reserva) {
         if (reserva.getDataInicio() == null || reserva.getDataFim() == null) {
-            throw new BusinessException("Data de início e data de fim são obrigatórias.");
+            throw new BusinessException("Data de inicio e data de fim sao obrigatorias.");
         }
 
         if (!reserva.getDataFim().isAfter(reserva.getDataInicio())) {
-            throw new BusinessException("A data fim deve ser maior que a data início.");
+            throw new BusinessException("A data fim deve ser maior que a data inicio.");
         }
     }
 
-    private void validarSubespaco(Reserva reserva) {
+    private Espaco validarSubespaco(Reserva reserva) {
         if (espacoRepository == null) {
-            return;
+            return null;
         }
 
         Espaco espacoPrincipal = espacoRepository.findById(reserva.getIdEspaco())
-                .orElseThrow(() -> new ResourceNotFoundException("Espaço não encontrado para o id: " + reserva.getIdEspaco()));
+                .orElseThrow(() -> new ResourceNotFoundException("Espaco nao encontrado para o id: " + reserva.getIdEspaco()));
 
         if (autorizacaoApplication != null) {
             autorizacaoApplication.validarAcessoEspaco(espacoPrincipal);
         }
 
         if (espacoPrincipal.getIdEspacoPai() != null) {
-            throw new BusinessException("Selecione o espaço principal e, se necessário, informe o subespaço separadamente.");
+            throw new BusinessException("Selecione o espaco principal e, se necessario, informe o subespaco separadamente.");
         }
 
         if (reserva.getIdSubespaco() == null) {
-            return;
+            return espacoPrincipal;
         }
 
         Espaco subespaco = espacoRepository.findById(reserva.getIdSubespaco())
-                .orElseThrow(() -> new ResourceNotFoundException("Subespaço não encontrado para o id: " + reserva.getIdSubespaco()));
+                .orElseThrow(() -> new ResourceNotFoundException("Subespaco nao encontrado para o id: " + reserva.getIdSubespaco()));
 
         if (!reserva.getIdEspaco().equals(subespaco.getIdEspacoPai())) {
-            throw new BusinessException("O subespaço selecionado não pertence ao espaço principal informado.");
+            throw new BusinessException("O subespaco selecionado nao pertence ao espaco principal informado.");
         }
+
+        return espacoPrincipal;
     }
 
     private void validarConflitoHorario(Reserva reserva) {
@@ -147,7 +152,7 @@ public class ReservaApplication {
             );
 
             if (existeConflito) {
-                throw new BusinessException("Já existe uma reserva para este espaço nesse intervalo.");
+                throw new BusinessException("Ja existe uma reserva para este espaco nesse intervalo.");
             }
             return;
         }
@@ -157,30 +162,18 @@ public class ReservaApplication {
                 .anyMatch(item -> possuiConflito(reserva, item));
 
         if (existeConflito) {
-            throw new BusinessException("Já existe uma reserva para este espaço ou subespaço nesse intervalo.");
+            throw new BusinessException("Ja existe uma reserva para este espaco ou subespaco nesse intervalo.");
         }
     }
 
     private void validarConflitoHorarioAtualizacao(Long idReserva, Reserva reserva) {
-        if (espacoRepository == null) {
-            boolean existeConflito = reservaRepository.findByIdEspaco(reserva.getIdEspaco())
-                    .stream()
-                    .filter(item -> !item.getIdReserva().equals(idReserva))
-                    .anyMatch(item -> possuiConflito(reserva, item));
-
-            if (existeConflito) {
-                throw new BusinessException("Já existe uma reserva para este espaço nesse intervalo.");
-            }
-            return;
-        }
-
         boolean existeConflito = reservaRepository.findByIdEspaco(reserva.getIdEspaco())
                 .stream()
                 .filter(item -> !item.getIdReserva().equals(idReserva))
                 .anyMatch(item -> possuiConflito(reserva, item));
 
         if (existeConflito) {
-            throw new BusinessException("Já existe uma reserva para este espaço ou subespaço nesse intervalo.");
+            throw new BusinessException("Ja existe uma reserva para este espaco ou subespaco nesse intervalo.");
         }
     }
 
@@ -207,5 +200,78 @@ public class ReservaApplication {
         if (autorizacaoApplication != null) {
             autorizacaoApplication.validarCriacaoOuEdicaoReserva(reserva);
         }
+    }
+
+    private void aplicarPoliticaAprovacaoCriacao(Reserva reserva, Espaco espacoPrincipal) {
+        if (autorizacaoApplication == null || espacoPrincipal == null) {
+            return;
+        }
+
+        Usuario usuarioAtual = autorizacaoApplication.obterUsuarioAtualObrigatorio();
+        boolean exigeAprovacao = Boolean.TRUE.equals(espacoPrincipal.getExigeAprovacao());
+        boolean podeAprovar = autorizacaoApplication.podeAprovarReservaNoEspaco(usuarioAtual, espacoPrincipal);
+
+        if (exigeAprovacao && !podeAprovar) {
+            reserva.setStatus(StatusReserva.PENDENTE);
+            reserva.setAprovadaPorUsuarioId(null);
+            reserva.setAprovadaEm(null);
+            return;
+        }
+
+        if (reserva.getStatus() == null) {
+            reserva.setStatus(exigeAprovacao ? StatusReserva.PENDENTE : StatusReserva.CONFIRMADA);
+        }
+
+        if (reserva.getStatus() == StatusReserva.CONFIRMADA && podeAprovar) {
+            registrarDecisaoAprovacao(reserva, usuarioAtual);
+        }
+    }
+
+    private void aplicarPoliticaAprovacaoAtualizacao(Reserva reservaExistente, Reserva dadosAtualizados, Espaco espacoPrincipal) {
+        StatusReserva statusAnterior = reservaExistente.getStatus();
+        StatusReserva statusSolicitado = dadosAtualizados.getStatus() != null
+                ? dadosAtualizados.getStatus()
+                : statusAnterior;
+
+        reservaExistente.setStatus(statusSolicitado);
+        reservaExistente.setObservacaoAprovacao(dadosAtualizados.getObservacaoAprovacao());
+
+        if (autorizacaoApplication == null || espacoPrincipal == null) {
+            reservaExistente.setAprovadaPorUsuarioId(dadosAtualizados.getAprovadaPorUsuarioId());
+            reservaExistente.setAprovadaEm(dadosAtualizados.getAprovadaEm());
+            return;
+        }
+
+        Usuario usuarioAtual = autorizacaoApplication.obterUsuarioAtualObrigatorio();
+        boolean exigeAprovacao = Boolean.TRUE.equals(espacoPrincipal.getExigeAprovacao());
+        boolean podeAprovar = autorizacaoApplication.podeAprovarReservaNoEspaco(usuarioAtual, espacoPrincipal);
+
+        if (exigeAprovacao && statusAnterior == StatusReserva.PENDENTE && statusSolicitado == StatusReserva.CONFIRMADA && !podeAprovar) {
+            throw new BusinessException("Somente responsaveis do espaco ou aprovadores podem confirmar reservas pendentes.");
+        }
+
+        if (statusSolicitado == StatusReserva.PENDENTE) {
+            reservaExistente.setAprovadaPorUsuarioId(null);
+            reservaExistente.setAprovadaEm(null);
+            return;
+        }
+
+        if (statusSolicitado == StatusReserva.CONFIRMADA && podeAprovar) {
+            registrarDecisaoAprovacao(reservaExistente, usuarioAtual);
+            return;
+        }
+
+        if (statusSolicitado == StatusReserva.CANCELADA && exigeAprovacao && podeAprovar) {
+            registrarDecisaoAprovacao(reservaExistente, usuarioAtual);
+            return;
+        }
+
+        reservaExistente.setAprovadaPorUsuarioId(dadosAtualizados.getAprovadaPorUsuarioId());
+        reservaExistente.setAprovadaEm(dadosAtualizados.getAprovadaEm());
+    }
+
+    private void registrarDecisaoAprovacao(Reserva reserva, Usuario aprovador) {
+        reserva.setAprovadaPorUsuarioId(aprovador.getIdUsuario());
+        reserva.setAprovadaEm(LocalDateTime.now());
     }
 }

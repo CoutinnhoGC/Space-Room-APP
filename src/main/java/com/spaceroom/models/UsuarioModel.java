@@ -47,6 +47,11 @@ public class UsuarioModel {
     private Boolean ativo;
     private Boolean podeReservar;
     private Boolean adminPlataforma;
+    private Boolean podeGerenciarUsuarios;
+    private Boolean podeGerenciarEspacos;
+    private Boolean podeAprovarReservas;
+    private Boolean podeGerenciarComunicados;
+    private Boolean podeVisualizarAuditoria;
     private LocalDateTime criadoEm;
     private LocalDateTime atualizadoEm;
 }

@@ -1,29 +1,81 @@
 package com.spaceroom.config;
 
+import com.spaceroom.entities.Cargo;
+import com.spaceroom.entities.CargoPermissao;
 import com.spaceroom.entities.Permissao;
+import com.spaceroom.repositories.CargoPermissaoRepository;
+import com.spaceroom.repositories.CargoRepository;
 import com.spaceroom.repositories.PermissaoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.text.Normalizer;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+
 @Configuration
 @RequiredArgsConstructor
 public class PermissionBootstrap {
 
+    private static final Set<String> CARGOS_GESTAO_ESCOLAR = Set.of(
+            "diretor",
+            "diretora",
+            "vice diretor",
+            "vice diretora",
+            "vice-diretor",
+            "vice-diretora",
+            "coordenador",
+            "coordenadora"
+    );
+
+    private static final Set<String> CARGOS_GESTAO_CORPORATIVA = Set.of(
+            "dono",
+            "dona",
+            "proprietario",
+            "proprietaria",
+            "socio",
+            "socia",
+            "gerente",
+            "gestor",
+            "gestora",
+            "administrador",
+            "administradora"
+    );
+
+    private static final Set<String> CARGOS_OPERACIONAIS_COM_RESERVA = Set.of(
+            "docente",
+            "professor",
+            "professora"
+    );
+
     private final PermissaoRepository permissaoRepository;
+    private final CargoRepository cargoRepository;
+    private final CargoPermissaoRepository cargoPermissaoRepository;
 
     @Bean
     public ApplicationRunner seedDefaultPermissions() {
         return args -> {
-            criarSeNaoExistir(
-                    PermissionCodes.GERENCIAR_INSTITUICOES,
-                    "Permite cadastrar e administrar instituicoes da plataforma."
-            );
-            criarSeNaoExistir(
-                    PermissionCodes.RESERVAR_ESPACO,
-                    "Permite criar e alterar reservas de espacos."
-            );
+            criarSeNaoExistir(PermissionCodes.GERENCIAR_INSTITUICOES,
+                    "Permite cadastrar e administrar instituicoes da plataforma.");
+            criarSeNaoExistir(PermissionCodes.GERENCIAR_USUARIOS,
+                    "Permite cadastrar, editar e desativar usuarios da instituicao.");
+            criarSeNaoExistir(PermissionCodes.GERENCIAR_ESPACOS,
+                    "Permite cadastrar e manter espacos, subespacos e suas regras operacionais.");
+            criarSeNaoExistir(PermissionCodes.RESERVAR_ESPACO,
+                    "Permite criar e alterar reservas de espacos.");
+            criarSeNaoExistir(PermissionCodes.APROVAR_RESERVAS,
+                    "Permite aprovar ou reprovar reservas pendentes de validacao.");
+            criarSeNaoExistir(PermissionCodes.GERENCIAR_COMUNICADOS,
+                    "Permite publicar avisos, murais e notificacoes gerenciais.");
+            criarSeNaoExistir(PermissionCodes.VISUALIZAR_AUDITORIA,
+                    "Permite consultar trilhas de auditoria e logs administrativos.");
+            criarSeNaoExistir(PermissionCodes.GERENCIAR_PLANOS,
+                    "Permite administrar planos, limites e modulos comerciais da plataforma.");
+
+            sincronizarPermissoesPadraoPorCargo();
         };
     }
 
@@ -35,5 +87,60 @@ public class PermissionBootstrap {
                                 .descricao(descricao)
                                 .build()
                 ));
+    }
+
+    private void sincronizarPermissoesPadraoPorCargo() {
+        List<Cargo> cargos = cargoRepository.findAll();
+        cargos.forEach(cargo -> permissoesPadraoParaCargo(cargo)
+                .forEach(nomePermissao -> vincularPermissaoAoCargoSeNecessario(cargo.getIdCargo(), nomePermissao)));
+    }
+
+    private Set<String> permissoesPadraoParaCargo(Cargo cargo) {
+        if (cargo == null || cargo.getNome() == null) {
+            return Set.of();
+        }
+
+        String nomeNormalizado = normalizar(cargo.getNome());
+        if (CARGOS_GESTAO_ESCOLAR.contains(nomeNormalizado) || CARGOS_GESTAO_CORPORATIVA.contains(nomeNormalizado)) {
+            return Set.of(
+                    PermissionCodes.RESERVAR_ESPACO,
+                    PermissionCodes.GERENCIAR_USUARIOS,
+                    PermissionCodes.GERENCIAR_ESPACOS,
+                    PermissionCodes.APROVAR_RESERVAS,
+                    PermissionCodes.GERENCIAR_COMUNICADOS,
+                    PermissionCodes.VISUALIZAR_AUDITORIA
+            );
+        }
+
+        if (CARGOS_OPERACIONAIS_COM_RESERVA.contains(nomeNormalizado)) {
+            return Set.of(PermissionCodes.RESERVAR_ESPACO);
+        }
+
+        return Set.of();
+    }
+
+    private void vincularPermissaoAoCargoSeNecessario(Integer idCargo, String nomePermissao) {
+        Permissao permissao = permissaoRepository.findByNome(nomePermissao).orElse(null);
+        if (permissao == null) {
+            return;
+        }
+
+        boolean jaExiste = cargoPermissaoRepository.findByIdCargo(idCargo)
+                .stream()
+                .anyMatch(item -> item.getIdPermissao().equals(permissao.getIdPermissao()));
+
+        if (jaExiste) {
+            return;
+        }
+
+        cargoPermissaoRepository.save(CargoPermissao.builder()
+                .idCargo(idCargo)
+                .idPermissao(permissao.getIdPermissao())
+                .build());
+    }
+
+    private String normalizar(String valor) {
+        String semAcento = Normalizer.normalize(valor, Normalizer.Form.NFD).replaceAll("\\p{M}", "");
+        return semAcento.toLowerCase(Locale.ROOT).trim().replaceAll("\\s+", " ");
     }
 }

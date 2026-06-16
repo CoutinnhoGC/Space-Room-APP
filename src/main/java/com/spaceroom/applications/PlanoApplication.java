@@ -39,6 +39,10 @@ public class PlanoApplication {
         planoExistente.setLimiteEspacos(dadosAtualizados.getLimiteEspacos());
         planoExistente.setLimiteReservasMes(dadosAtualizados.getLimiteReservasMes());
         planoExistente.setVitrineIncluida(dadosAtualizados.getVitrineIncluida());
+        planoExistente.setMultiunidadeHabilitada(dadosAtualizados.getMultiunidadeHabilitada());
+        planoExistente.setWorkflowAprovacaoHabilitado(dadosAtualizados.getWorkflowAprovacaoHabilitado());
+        planoExistente.setAuditoriaAvancadaHabilitada(dadosAtualizados.getAuditoriaAvancadaHabilitada());
+        planoExistente.setModulosHabilitados(dadosAtualizados.getModulosHabilitados());
         planoExistente.setAtivo(dadosAtualizados.getAtivo());
 
         return planoRepository.save(planoExistente);

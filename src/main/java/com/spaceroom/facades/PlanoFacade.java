@@ -52,6 +52,10 @@ public class PlanoFacade {
                 .limiteEspacos(model.getLimiteEspacos())
                 .limiteReservasMes(model.getLimiteReservasMes())
                 .vitrineIncluida(model.getVitrineIncluida())
+                .multiunidadeHabilitada(model.getMultiunidadeHabilitada())
+                .workflowAprovacaoHabilitado(model.getWorkflowAprovacaoHabilitado())
+                .auditoriaAvancadaHabilitada(model.getAuditoriaAvancadaHabilitada())
+                .modulosHabilitados(model.getModulosHabilitados())
                 .ativo(model.getAtivo())
                 .criadoEm(model.getCriadoEm())
                 .build();
@@ -67,6 +71,10 @@ public class PlanoFacade {
         model.setLimiteEspacos(plano.getLimiteEspacos());
         model.setLimiteReservasMes(plano.getLimiteReservasMes());
         model.setVitrineIncluida(plano.getVitrineIncluida());
+        model.setMultiunidadeHabilitada(plano.getMultiunidadeHabilitada());
+        model.setWorkflowAprovacaoHabilitado(plano.getWorkflowAprovacaoHabilitado());
+        model.setAuditoriaAvancadaHabilitada(plano.getAuditoriaAvancadaHabilitada());
+        model.setModulosHabilitados(plano.getModulosHabilitados());
         model.setAtivo(plano.getAtivo());
         model.setCriadoEm(plano.getCriadoEm());
         return model;

@@ -123,6 +123,11 @@ public class UsuarioApplication {
         model.setAtivo(usuario.getAtivo());
         model.setPodeReservar(autorizacaoApplication != null ? autorizacaoApplication.resolverPodeReservar(usuario, null) : null);
         model.setAdminPlataforma(autorizacaoApplication != null && autorizacaoApplication.resolverAdminPlataforma(usuario));
+        model.setPodeGerenciarUsuarios(autorizacaoApplication != null && autorizacaoApplication.podeGerenciarUsuarios(usuario));
+        model.setPodeGerenciarEspacos(autorizacaoApplication != null && autorizacaoApplication.podeGerenciarEspacos(usuario));
+        model.setPodeAprovarReservas(autorizacaoApplication != null && autorizacaoApplication.podeAprovarReservas(usuario));
+        model.setPodeGerenciarComunicados(autorizacaoApplication != null && autorizacaoApplication.podeGerenciarComunicados(usuario));
+        model.setPodeVisualizarAuditoria(autorizacaoApplication != null && autorizacaoApplication.podeVisualizarAuditoria(usuario));
         model.setCriadoEm(usuario.getCriadoEm());
         model.setAtualizadoEm(usuario.getAtualizadoEm());
         return model;
