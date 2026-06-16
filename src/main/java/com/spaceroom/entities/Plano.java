@@ -51,18 +51,6 @@ public class Plano {
     @Column(name = "vitrine_incluida", nullable = false)
     private Boolean vitrineIncluida;
 
-    @Column(name = "multiunidade_habilitada", nullable = false)
-    private Boolean multiunidadeHabilitada;
-
-    @Column(name = "workflow_aprovacao_habilitado", nullable = false)
-    private Boolean workflowAprovacaoHabilitado;
-
-    @Column(name = "auditoria_avancada_habilitada", nullable = false)
-    private Boolean auditoriaAvancadaHabilitada;
-
-    @Column(name = "modulos_habilitados", columnDefinition = "TEXT")
-    private String modulosHabilitados;
-
     @Column(name = "ativo", nullable = false)
     private Boolean ativo;
 
@@ -75,18 +63,6 @@ public class Plano {
 
         if (this.vitrineIncluida == null) {
             this.vitrineIncluida = false;
-        }
-
-        if (this.multiunidadeHabilitada == null) {
-            this.multiunidadeHabilitada = false;
-        }
-
-        if (this.workflowAprovacaoHabilitado == null) {
-            this.workflowAprovacaoHabilitado = false;
-        }
-
-        if (this.auditoriaAvancadaHabilitada == null) {
-            this.auditoriaAvancadaHabilitada = false;
         }
 
         if (this.ativo == null) {

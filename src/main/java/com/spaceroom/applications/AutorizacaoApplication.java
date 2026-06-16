@@ -73,13 +73,7 @@ public class AutorizacaoApplication {
             return false;
         }
 
-        if (isAdminPlataforma(usuario) || podeAprovarReservas(usuario)) {
-            return true;
-        }
-
-        return espaco != null
-                && espaco.getIdResponsavelEspaco() != null
-                && espaco.getIdResponsavelEspaco().equals(usuario.getIdUsuario());
+        return isAdminPlataforma(usuario) || podeAprovarReservas(usuario);
     }
 
     public void validarCriacaoInstituicao() {

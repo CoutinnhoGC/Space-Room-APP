@@ -52,10 +52,7 @@ public class EspacoApplication {
         espacoExistente.setCapacidade(dadosAtualizados.getCapacidade());
         espacoExistente.setRecursosFixos(dadosAtualizados.getRecursosFixos());
         espacoExistente.setImagemUrl(dadosAtualizados.getImagemUrl());
-        espacoExistente.setCodigoUnidade(dadosAtualizados.getCodigoUnidade());
         espacoExistente.setPermiteSubespacos(dadosAtualizados.getPermiteSubespacos());
-        espacoExistente.setExigeAprovacao(dadosAtualizados.getExigeAprovacao());
-        espacoExistente.setIdResponsavelEspaco(dadosAtualizados.getIdResponsavelEspaco());
         espacoExistente.setAtivo(dadosAtualizados.getAtivo());
 
         return espacoRepository.save(espacoExistente);

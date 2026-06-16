@@ -45,11 +45,6 @@ public class ReservaModel {
     @Size(max = 500, message = "A observacao deve ter no maximo 500 caracteres.")
     private String observacao;
 
-    @Size(max = 500, message = "A observacao de aprovacao deve ter no maximo 500 caracteres.")
-    private String observacaoAprovacao;
-
-    private Long aprovadaPorUsuarioId;
-    private LocalDateTime aprovadaEm;
     private LocalDateTime criadoEm;
     private LocalDateTime atualizadoEm;
 }

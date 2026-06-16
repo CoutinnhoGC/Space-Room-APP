@@ -63,17 +63,8 @@ public class Espaco {
     @Column(name = "imagem_url", columnDefinition = "TEXT")
     private String imagemUrl;
 
-    @Column(name = "codigo_unidade", length = 80)
-    private String codigoUnidade;
-
     @Column(name = "permite_subespacos")
     private Boolean permiteSubespacos;
-
-    @Column(name = "exige_aprovacao", nullable = false)
-    private Boolean exigeAprovacao;
-
-    @Column(name = "id_responsavel_espaco")
-    private Long idResponsavelEspaco;
 
     @Column(name = "ativo", nullable = false)
     private Boolean ativo;
@@ -98,9 +89,6 @@ public class Espaco {
             this.permiteSubespacos = false;
         }
 
-        if (this.exigeAprovacao == null) {
-            this.exigeAprovacao = false;
-        }
     }
 
     @PreUpdate

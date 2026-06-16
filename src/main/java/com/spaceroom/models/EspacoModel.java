@@ -42,12 +42,7 @@ public class EspacoModel {
     @Size(max = 500, message = "A URL da imagem deve ter no maximo 500 caracteres.")
     private String imagemUrl;
 
-    @Size(max = 80, message = "O codigo da unidade deve ter no maximo 80 caracteres.")
-    private String codigoUnidade;
-
     private Boolean permiteSubespacos;
-    private Boolean exigeAprovacao;
-    private Long idResponsavelEspaco;
     private Boolean ativo;
     private LocalDateTime criadoEm;
     private LocalDateTime atualizadoEm;

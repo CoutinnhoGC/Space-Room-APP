@@ -66,15 +66,6 @@ public class Reserva {
     @Column(name = "observacao", columnDefinition = "TEXT")
     private String observacao;
 
-    @Column(name = "observacao_aprovacao", columnDefinition = "TEXT")
-    private String observacaoAprovacao;
-
-    @Column(name = "aprovada_por_usuario_id")
-    private Long aprovadaPorUsuarioId;
-
-    @Column(name = "aprovada_em")
-    private LocalDateTime aprovadaEm;
-
     @Column(name = "criado_em")
     private LocalDateTime criadoEm;
 

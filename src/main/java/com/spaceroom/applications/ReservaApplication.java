@@ -11,7 +11,6 @@ import com.spaceroom.repositories.ReservaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -38,8 +37,7 @@ public class ReservaApplication {
         validarAutorizacao(reserva);
         validarCamposObrigatorios(reserva);
         validarDatas(reserva);
-        Espaco espacoPrincipal = validarSubespaco(reserva);
-        aplicarPoliticaAprovacaoCriacao(reserva, espacoPrincipal);
+        validarSubespaco(reserva);
         validarConflitoHorario(reserva);
         return reservaRepository.save(reserva);
     }
@@ -70,7 +68,7 @@ public class ReservaApplication {
 
         validarCamposObrigatorios(dadosAtualizados);
         validarDatas(dadosAtualizados);
-        Espaco espacoPrincipal = validarSubespaco(dadosAtualizados);
+        validarSubespaco(dadosAtualizados);
         validarConflitoHorarioAtualizacao(idReserva, dadosAtualizados);
 
         reservaExistente.setIdInstituicao(dadosAtualizados.getIdInstituicao());
@@ -81,9 +79,8 @@ public class ReservaApplication {
         reservaExistente.setFinalidade(dadosAtualizados.getFinalidade());
         reservaExistente.setDataInicio(dadosAtualizados.getDataInicio());
         reservaExistente.setDataFim(dadosAtualizados.getDataFim());
+        reservaExistente.setStatus(dadosAtualizados.getStatus());
         reservaExistente.setObservacao(dadosAtualizados.getObservacao());
-
-        aplicarPoliticaAprovacaoAtualizacao(reservaExistente, dadosAtualizados, espacoPrincipal);
 
         return reservaRepository.save(reservaExistente);
     }
@@ -113,9 +110,9 @@ public class ReservaApplication {
         }
     }
 
-    private Espaco validarSubespaco(Reserva reserva) {
+    private void validarSubespaco(Reserva reserva) {
         if (espacoRepository == null) {
-            return null;
+            return;
         }
 
         Espaco espacoPrincipal = espacoRepository.findById(reserva.getIdEspaco())
@@ -130,7 +127,7 @@ public class ReservaApplication {
         }
 
         if (reserva.getIdSubespaco() == null) {
-            return espacoPrincipal;
+            return;
         }
 
         Espaco subespaco = espacoRepository.findById(reserva.getIdSubespaco())
@@ -139,8 +136,6 @@ public class ReservaApplication {
         if (!reserva.getIdEspaco().equals(subespaco.getIdEspacoPai())) {
             throw new BusinessException("O subespaco selecionado nao pertence ao espaco principal informado.");
         }
-
-        return espacoPrincipal;
     }
 
     private void validarConflitoHorario(Reserva reserva) {
@@ -167,6 +162,18 @@ public class ReservaApplication {
     }
 
     private void validarConflitoHorarioAtualizacao(Long idReserva, Reserva reserva) {
+        if (espacoRepository == null) {
+            boolean existeConflito = reservaRepository.findByIdEspaco(reserva.getIdEspaco())
+                    .stream()
+                    .filter(item -> !item.getIdReserva().equals(idReserva))
+                    .anyMatch(item -> possuiConflito(reserva, item));
+
+            if (existeConflito) {
+                throw new BusinessException("Ja existe uma reserva para este espaco nesse intervalo.");
+            }
+            return;
+        }
+
         boolean existeConflito = reservaRepository.findByIdEspaco(reserva.getIdEspaco())
                 .stream()
                 .filter(item -> !item.getIdReserva().equals(idReserva))
@@ -200,78 +207,5 @@ public class ReservaApplication {
         if (autorizacaoApplication != null) {
             autorizacaoApplication.validarCriacaoOuEdicaoReserva(reserva);
         }
-    }
-
-    private void aplicarPoliticaAprovacaoCriacao(Reserva reserva, Espaco espacoPrincipal) {
-        if (autorizacaoApplication == null || espacoPrincipal == null) {
-            return;
-        }
-
-        Usuario usuarioAtual = autorizacaoApplication.obterUsuarioAtualObrigatorio();
-        boolean exigeAprovacao = Boolean.TRUE.equals(espacoPrincipal.getExigeAprovacao());
-        boolean podeAprovar = autorizacaoApplication.podeAprovarReservaNoEspaco(usuarioAtual, espacoPrincipal);
-
-        if (exigeAprovacao && !podeAprovar) {
-            reserva.setStatus(StatusReserva.PENDENTE);
-            reserva.setAprovadaPorUsuarioId(null);
-            reserva.setAprovadaEm(null);
-            return;
-        }
-
-        if (reserva.getStatus() == null) {
-            reserva.setStatus(exigeAprovacao ? StatusReserva.PENDENTE : StatusReserva.CONFIRMADA);
-        }
-
-        if (reserva.getStatus() == StatusReserva.CONFIRMADA && podeAprovar) {
-            registrarDecisaoAprovacao(reserva, usuarioAtual);
-        }
-    }
-
-    private void aplicarPoliticaAprovacaoAtualizacao(Reserva reservaExistente, Reserva dadosAtualizados, Espaco espacoPrincipal) {
-        StatusReserva statusAnterior = reservaExistente.getStatus();
-        StatusReserva statusSolicitado = dadosAtualizados.getStatus() != null
-                ? dadosAtualizados.getStatus()
-                : statusAnterior;
-
-        reservaExistente.setStatus(statusSolicitado);
-        reservaExistente.setObservacaoAprovacao(dadosAtualizados.getObservacaoAprovacao());
-
-        if (autorizacaoApplication == null || espacoPrincipal == null) {
-            reservaExistente.setAprovadaPorUsuarioId(dadosAtualizados.getAprovadaPorUsuarioId());
-            reservaExistente.setAprovadaEm(dadosAtualizados.getAprovadaEm());
-            return;
-        }
-
-        Usuario usuarioAtual = autorizacaoApplication.obterUsuarioAtualObrigatorio();
-        boolean exigeAprovacao = Boolean.TRUE.equals(espacoPrincipal.getExigeAprovacao());
-        boolean podeAprovar = autorizacaoApplication.podeAprovarReservaNoEspaco(usuarioAtual, espacoPrincipal);
-
-        if (exigeAprovacao && statusAnterior == StatusReserva.PENDENTE && statusSolicitado == StatusReserva.CONFIRMADA && !podeAprovar) {
-            throw new BusinessException("Somente responsaveis do espaco ou aprovadores podem confirmar reservas pendentes.");
-        }
-
-        if (statusSolicitado == StatusReserva.PENDENTE) {
-            reservaExistente.setAprovadaPorUsuarioId(null);
-            reservaExistente.setAprovadaEm(null);
-            return;
-        }
-
-        if (statusSolicitado == StatusReserva.CONFIRMADA && podeAprovar) {
-            registrarDecisaoAprovacao(reservaExistente, usuarioAtual);
-            return;
-        }
-
-        if (statusSolicitado == StatusReserva.CANCELADA && exigeAprovacao && podeAprovar) {
-            registrarDecisaoAprovacao(reservaExistente, usuarioAtual);
-            return;
-        }
-
-        reservaExistente.setAprovadaPorUsuarioId(dadosAtualizados.getAprovadaPorUsuarioId());
-        reservaExistente.setAprovadaEm(dadosAtualizados.getAprovadaEm());
-    }
-
-    private void registrarDecisaoAprovacao(Reserva reserva, Usuario aprovador) {
-        reserva.setAprovadaPorUsuarioId(aprovador.getIdUsuario());
-        reserva.setAprovadaEm(LocalDateTime.now());
     }
 }

@@ -56,9 +56,6 @@ public class ReservaFacade {
                 .dataFim(model.getDataFim())
                 .status(model.getStatus() != null ? model.getStatus() : StatusReserva.PENDENTE)
                 .observacao(model.getObservacao())
-                .observacaoAprovacao(model.getObservacaoAprovacao())
-                .aprovadaPorUsuarioId(model.getAprovadaPorUsuarioId())
-                .aprovadaEm(model.getAprovadaEm())
                 .criadoEm(model.getCriadoEm())
                 .atualizadoEm(model.getAtualizadoEm())
                 .build();
@@ -77,9 +74,6 @@ public class ReservaFacade {
         model.setDataFim(reserva.getDataFim());
         model.setStatus(reserva.getStatus());
         model.setObservacao(reserva.getObservacao());
-        model.setObservacaoAprovacao(reserva.getObservacaoAprovacao());
-        model.setAprovadaPorUsuarioId(reserva.getAprovadaPorUsuarioId());
-        model.setAprovadaEm(reserva.getAprovadaEm());
         model.setCriadoEm(reserva.getCriadoEm());
         model.setAtualizadoEm(reserva.getAtualizadoEm());
         return model;
