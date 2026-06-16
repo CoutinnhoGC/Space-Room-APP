@@ -1,5 +1,6 @@
 package com.spaceroom.models;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -15,29 +16,32 @@ public class UsuarioModel {
 
     private Long idUsuario;
 
-    @NotNull(message = "O id da instituição é obrigatório.")
+    @NotNull(message = "O id da instituicao e obrigatorio.")
     private Long idInstituicao;
 
-    @NotNull(message = "O id do cargo é obrigatório.")
+    @NotNull(message = "O id do cargo e obrigatorio.")
     private Integer idCargo;
 
-    @NotBlank(message = "O nome é obrigatório.")
-    @Size(max = 120, message = "O nome deve ter no máximo 120 caracteres.")
+    @NotBlank(message = "O nome e obrigatorio.")
+    @Size(max = 120, message = "O nome deve ter no maximo 120 caracteres.")
     private String nome;
 
-    @NotBlank(message = "O e-mail é obrigatório.")
-    @Email(message = "Informe um e-mail válido.")
-    @Size(max = 120, message = "O e-mail deve ter no máximo 120 caracteres.")
+    @NotBlank(message = "O e-mail e obrigatorio.")
+    @Email(message = "Informe um e-mail valido.")
+    @Size(max = 120, message = "O e-mail deve ter no maximo 120 caracteres.")
     private String email;
 
-    @Size(max = 120, message = "A senha deve ter no máximo 120 caracteres.")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @Size(max = 120, message = "A senha deve ter no maximo 120 caracteres.")
     private String senhaHash;
 
     private Boolean primeiroAcesso;
 
-    @Size(max = 255, message = "O token deve ter no máximo 255 caracteres.")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @Size(max = 255, message = "O token deve ter no maximo 255 caracteres.")
     private String tokenDefinicaoSenha;
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private LocalDateTime tokenExpiracao;
     private LocalDateTime ultimoLoginEm;
     private Boolean ativo;

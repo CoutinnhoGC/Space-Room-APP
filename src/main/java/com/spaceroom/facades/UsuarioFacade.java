@@ -1,6 +1,5 @@
 package com.spaceroom.facades;
 
-import com.spaceroom.applications.AutorizacaoApplication;
 import com.spaceroom.applications.UsuarioApplication;
 import com.spaceroom.entities.Usuario;
 import com.spaceroom.models.UsuarioModel;
@@ -14,30 +13,26 @@ import java.util.List;
 public class UsuarioFacade {
 
     private final UsuarioApplication usuarioApplication;
-    private final AutorizacaoApplication autorizacaoApplication;
 
     public UsuarioModel criar(UsuarioModel model) {
         Usuario usuario = converterModelParaEntity(model);
-        Usuario usuarioSalvo = usuarioApplication.criar(usuario, model.getPodeReservar());
-        return converterEntityParaModel(usuarioSalvo);
+        return usuarioApplication.toModel(usuarioApplication.criar(usuario, model.getPodeReservar()));
     }
 
     public List<UsuarioModel> listarTodos() {
         return usuarioApplication.listarTodos()
                 .stream()
-                .map(this::converterEntityParaModel)
+                .map(usuarioApplication::toModel)
                 .toList();
     }
 
     public UsuarioModel buscarPorId(Long idUsuario) {
-        Usuario usuario = usuarioApplication.buscarPorId(idUsuario);
-        return converterEntityParaModel(usuario);
+        return usuarioApplication.toModel(usuarioApplication.buscarPorId(idUsuario));
     }
 
     public UsuarioModel atualizar(Long idUsuario, UsuarioModel model) {
         Usuario usuario = converterModelParaEntity(model);
-        Usuario usuarioAtualizado = usuarioApplication.atualizar(idUsuario, usuario, model.getPodeReservar());
-        return converterEntityParaModel(usuarioAtualizado);
+        return usuarioApplication.toModel(usuarioApplication.atualizar(idUsuario, usuario, model.getPodeReservar()));
     }
 
     public void deletar(Long idUsuario) {
@@ -60,25 +55,5 @@ public class UsuarioFacade {
                 .criadoEm(model.getCriadoEm())
                 .atualizadoEm(model.getAtualizadoEm())
                 .build();
-    }
-
-    private UsuarioModel converterEntityParaModel(Usuario usuario) {
-        UsuarioModel model = new UsuarioModel();
-        model.setIdUsuario(usuario.getIdUsuario());
-        model.setIdInstituicao(usuario.getIdInstituicao());
-        model.setIdCargo(usuario.getIdCargo());
-        model.setNome(usuario.getNome());
-        model.setEmail(usuario.getEmail());
-        model.setSenhaHash(usuario.getSenhaHash());
-        model.setPrimeiroAcesso(usuario.getPrimeiroAcesso());
-        model.setTokenDefinicaoSenha(usuario.getTokenDefinicaoSenha());
-        model.setTokenExpiracao(usuario.getTokenExpiracao());
-        model.setUltimoLoginEm(usuario.getUltimoLoginEm());
-        model.setAtivo(usuario.getAtivo());
-        model.setPodeReservar(autorizacaoApplication.resolverPodeReservar(usuario, null));
-        model.setAdminPlataforma(autorizacaoApplication.resolverAdminPlataforma(usuario));
-        model.setCriadoEm(usuario.getCriadoEm());
-        model.setAtualizadoEm(usuario.getAtualizadoEm());
-        return model;
     }
 }

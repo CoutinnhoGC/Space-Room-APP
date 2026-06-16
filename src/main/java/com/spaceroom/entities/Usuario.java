@@ -57,6 +57,9 @@ public class Usuario {
     @Column(name = "ultimo_login_em")
     private LocalDateTime ultimoLoginEm;
 
+    @Column(name = "sessao_revogada_em")
+    private LocalDateTime sessaoRevogadaEm;
+
     @Column(name = "ativo", nullable = false)
     private Boolean ativo;
 

@@ -3,32 +3,23 @@ package com.spaceroom.applications;
 import com.spaceroom.entities.Espaco;
 import com.spaceroom.entities.Reserva;
 import com.spaceroom.entities.StatusReserva;
+import com.spaceroom.entities.Usuario;
 import com.spaceroom.exceptions.BusinessException;
 import com.spaceroom.exceptions.ResourceNotFoundException;
 import com.spaceroom.repositories.EspacoRepository;
 import com.spaceroom.repositories.ReservaRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class ReservaApplication {
 
     private final ReservaRepository reservaRepository;
     private final EspacoRepository espacoRepository;
     private final AutorizacaoApplication autorizacaoApplication;
-
-    @Autowired
-    public ReservaApplication(ReservaRepository reservaRepository, EspacoRepository espacoRepository, AutorizacaoApplication autorizacaoApplication) {
-        this.reservaRepository = reservaRepository;
-        this.espacoRepository = espacoRepository;
-        this.autorizacaoApplication = autorizacaoApplication;
-    }
-
-    public ReservaApplication(ReservaRepository reservaRepository, EspacoRepository espacoRepository) {
-        this(reservaRepository, espacoRepository, null);
-    }
 
     public ReservaApplication(ReservaRepository reservaRepository) {
         this(reservaRepository, null, null);
@@ -44,14 +35,23 @@ public class ReservaApplication {
     }
 
     public List<Reserva> listarTodas() {
-        return reservaRepository.findAll();
+        if (autorizacaoApplication == null) {
+            return reservaRepository.findAll();
+        }
+        Usuario usuarioAtual = autorizacaoApplication.obterUsuarioAtualObrigatorio();
+        if (autorizacaoApplication.isAdminPlataforma(usuarioAtual)) {
+            return reservaRepository.findAll();
+        }
+        return reservaRepository.findByIdInstituicao(usuarioAtual.getIdInstituicao());
     }
 
     public Reserva buscarPorId(Long idReserva) {
-        return reservaRepository.findById(idReserva)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Reserva não encontrada para o id: " + idReserva
-                ));
+        Reserva reserva = reservaRepository.findById(idReserva)
+                .orElseThrow(() -> new ResourceNotFoundException("Reserva não encontrada para o id: " + idReserva));
+        if (autorizacaoApplication != null) {
+            autorizacaoApplication.validarAcessoReserva(reserva);
+        }
+        return reserva;
     }
 
     public Reserva atualizar(Long idReserva, Reserva dadosAtualizados) {
@@ -98,7 +98,7 @@ public class ReservaApplication {
         }
 
         if (!reserva.getDataFim().isAfter(reserva.getDataInicio())) {
-            throw new BusinessException("A data fim deve ser maior que a data de início.");
+            throw new BusinessException("A data fim deve ser maior que a data início.");
         }
     }
 
@@ -109,6 +109,10 @@ public class ReservaApplication {
 
         Espaco espacoPrincipal = espacoRepository.findById(reserva.getIdEspaco())
                 .orElseThrow(() -> new ResourceNotFoundException("Espaço não encontrado para o id: " + reserva.getIdEspaco()));
+
+        if (autorizacaoApplication != null) {
+            autorizacaoApplication.validarAcessoEspaco(espacoPrincipal);
+        }
 
         if (espacoPrincipal.getIdEspacoPai() != null) {
             throw new BusinessException("Selecione o espaço principal e, se necessário, informe o subespaço separadamente.");
@@ -127,8 +131,22 @@ public class ReservaApplication {
     }
 
     private void validarConflitoHorario(Reserva reserva) {
-        List<Reserva> reservasMesmoEspaco = reservaRepository.findByIdEspaco(reserva.getIdEspaco());
-        boolean existeConflito = reservasMesmoEspaco.stream().anyMatch(item -> possuiConflito(reserva, item));
+        if (espacoRepository == null) {
+            boolean existeConflito = reservaRepository.existsByIdEspacoAndDataInicioLessThanAndDataFimGreaterThan(
+                    reserva.getIdEspaco(),
+                    reserva.getDataFim(),
+                    reserva.getDataInicio()
+            );
+
+            if (existeConflito) {
+                throw new BusinessException("Já existe uma reserva para este espaço nesse intervalo.");
+            }
+            return;
+        }
+
+        boolean existeConflito = reservaRepository.findByIdEspaco(reserva.getIdEspaco())
+                .stream()
+                .anyMatch(item -> possuiConflito(reserva, item));
 
         if (existeConflito) {
             throw new BusinessException("Já existe uma reserva para este espaço ou subespaço nesse intervalo.");
@@ -136,9 +154,20 @@ public class ReservaApplication {
     }
 
     private void validarConflitoHorarioAtualizacao(Long idReserva, Reserva reserva) {
-        List<Reserva> reservasMesmoEspaco = reservaRepository.findByIdEspaco(reserva.getIdEspaco());
+        if (espacoRepository == null) {
+            boolean existeConflito = reservaRepository.findByIdEspaco(reserva.getIdEspaco())
+                    .stream()
+                    .filter(item -> !item.getIdReserva().equals(idReserva))
+                    .anyMatch(item -> possuiConflito(reserva, item));
 
-        boolean existeConflito = reservasMesmoEspaco.stream()
+            if (existeConflito) {
+                throw new BusinessException("Já existe uma reserva para este espaço nesse intervalo.");
+            }
+            return;
+        }
+
+        boolean existeConflito = reservaRepository.findByIdEspaco(reserva.getIdEspaco())
+                .stream()
                 .filter(item -> !item.getIdReserva().equals(idReserva))
                 .anyMatch(item -> possuiConflito(reserva, item));
 
@@ -167,10 +196,8 @@ public class ReservaApplication {
     }
 
     private void validarAutorizacao(Reserva reserva) {
-        if (autorizacaoApplication == null) {
-            return;
+        if (autorizacaoApplication != null) {
+            autorizacaoApplication.validarCriacaoOuEdicaoReserva(reserva);
         }
-
-        autorizacaoApplication.validarCriacaoOuEdicaoReserva(reserva);
     }
 }

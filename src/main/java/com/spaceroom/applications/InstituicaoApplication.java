@@ -1,6 +1,7 @@
 package com.spaceroom.applications;
 
 import com.spaceroom.entities.Instituicao;
+import com.spaceroom.entities.Usuario;
 import com.spaceroom.exceptions.ResourceNotFoundException;
 import com.spaceroom.repositories.InstituicaoRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,14 +22,18 @@ public class InstituicaoApplication {
     }
 
     public List<Instituicao> listarTodas() {
-        return instituicaoRepository.findAll();
+        Usuario usuarioAtual = autorizacaoApplication.obterUsuarioAtualObrigatorio();
+        if (autorizacaoApplication.isAdminPlataforma(usuarioAtual)) {
+            return instituicaoRepository.findAll();
+        }
+        return List.of(buscarPorId(usuarioAtual.getIdInstituicao()));
     }
 
     public Instituicao buscarPorId(Long idInstituicao) {
-        return instituicaoRepository.findById(idInstituicao)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Instituicao nao encontrada para o id: " + idInstituicao
-                ));
+        Instituicao instituicao = instituicaoRepository.findById(idInstituicao)
+                .orElseThrow(() -> new ResourceNotFoundException("Instituicao nao encontrada para o id: " + idInstituicao));
+        autorizacaoApplication.validarAcessoInstituicao(instituicao.getIdInstituicao());
+        return instituicao;
     }
 
     public Instituicao atualizar(Long idInstituicao, Instituicao dadosAtualizados) {

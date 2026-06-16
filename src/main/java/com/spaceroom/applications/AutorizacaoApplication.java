@@ -2,6 +2,7 @@ package com.spaceroom.applications;
 
 import com.spaceroom.config.PermissionCodes;
 import com.spaceroom.entities.Cargo;
+import com.spaceroom.entities.Espaco;
 import com.spaceroom.entities.Instituicao;
 import com.spaceroom.entities.Permissao;
 import com.spaceroom.entities.Reserva;
@@ -14,8 +15,10 @@ import com.spaceroom.repositories.InstituicaoRepository;
 import com.spaceroom.repositories.PermissaoRepository;
 import com.spaceroom.repositories.UsuarioPermissaoRepository;
 import com.spaceroom.repositories.UsuarioRepository;
-import jakarta.servlet.http.HttpServletRequest;
+import com.spaceroom.security.AuthenticatedUser;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.text.Normalizer;
@@ -27,8 +30,6 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class AutorizacaoApplication {
-
-    private static final String HEADER_USER_ID = "X-User-Id";
 
     private static final Set<String> CARGOS_ESCOLA_COM_RESERVA = Set.of(
             "diretor",
@@ -58,7 +59,6 @@ public class AutorizacaoApplication {
             "administradora"
     );
 
-    private final HttpServletRequest request;
     private final UsuarioRepository usuarioRepository;
     private final InstituicaoRepository instituicaoRepository;
     private final CargoRepository cargoRepository;
@@ -66,12 +66,12 @@ public class AutorizacaoApplication {
     private final UsuarioPermissaoRepository usuarioPermissaoRepository;
 
     public Usuario obterUsuarioAtualObrigatorio() {
-        Long idUsuario = obterIdUsuarioAtual();
-        if (idUsuario == null) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof AuthenticatedUser principal)) {
             throw new BusinessException("Usuario autenticado e obrigatorio para esta operacao.");
         }
 
-        return usuarioRepository.findById(idUsuario)
+        return usuarioRepository.findById(principal.idUsuario())
                 .orElseThrow(() -> new BusinessException("Usuario autenticado nao encontrado."));
     }
 
@@ -104,6 +104,29 @@ public class AutorizacaoApplication {
 
         if (!usuarioAtual.getIdInstituicao().equals(idInstituicao)) {
             throw new BusinessException("Voce so pode acessar dados da sua propria instituicao.");
+        }
+    }
+
+    public void validarAcessoUsuario(Usuario usuarioAlvo) {
+        validarAcessoInstituicao(usuarioAlvo.getIdInstituicao());
+    }
+
+    public void validarAcessoEspaco(Espaco espaco) {
+        validarAcessoInstituicao(espaco.getIdInstituicao());
+    }
+
+    public void validarAcessoReserva(Reserva reserva) {
+        Usuario usuarioAtual = obterUsuarioAtualObrigatorio();
+        if (isAdminPlataforma(usuarioAtual)) {
+            return;
+        }
+
+        if (!usuarioAtual.getIdInstituicao().equals(reserva.getIdInstituicao())) {
+            throw new BusinessException("Voce so pode acessar reservas da sua propria instituicao.");
+        }
+
+        if (!usuarioAtual.getIdUsuario().equals(reserva.getIdUsuario()) && !podeReservar(usuarioAtual)) {
+            throw new BusinessException("Voce nao possui permissao para acessar esta reserva.");
         }
     }
 
@@ -141,24 +164,9 @@ public class AutorizacaoApplication {
         sincronizarPermissaoUsuario(usuario.getIdUsuario(), PermissionCodes.RESERVAR_ESPACO, valorSolicitado, padraoCargo);
     }
 
-    private Long obterIdUsuarioAtual() {
-        String raw = request.getHeader(HEADER_USER_ID);
-        if (raw == null || raw.isBlank()) {
-            return null;
-        }
-
-        try {
-            return Long.parseLong(raw);
-        } catch (NumberFormatException ex) {
-            throw new BusinessException("Cabecalho X-User-Id invalido.");
-        }
-    }
-
     private boolean calcularPermissaoPadraoReserva(Usuario usuario) {
-        Instituicao instituicao = instituicaoRepository.findById(usuario.getIdInstituicao())
-                .orElse(null);
-        Cargo cargo = cargoRepository.findById(usuario.getIdCargo())
-                .orElse(null);
+        Instituicao instituicao = instituicaoRepository.findById(usuario.getIdInstituicao()).orElse(null);
+        Cargo cargo = cargoRepository.findById(usuario.getIdCargo()).orElse(null);
 
         if (instituicao == null || cargo == null || cargo.getNome() == null) {
             return false;
@@ -215,11 +223,7 @@ public class AutorizacaoApplication {
     }
 
     private String normalizar(String valor) {
-        String semAcento = Normalizer.normalize(valor, Normalizer.Form.NFD)
-                .replaceAll("\\p{M}", "");
-        return semAcento
-                .toLowerCase(Locale.ROOT)
-                .trim()
-                .replaceAll("\\s+", " ");
+        String semAcento = Normalizer.normalize(valor, Normalizer.Form.NFD).replaceAll("\\p{M}", "");
+        return semAcento.toLowerCase(Locale.ROOT).trim().replaceAll("\\s+", " ");
     }
 }
