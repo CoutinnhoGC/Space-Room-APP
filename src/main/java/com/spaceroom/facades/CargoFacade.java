@@ -47,6 +47,10 @@ public class CargoFacade {
                 .idCargo(model.getIdCargo())
                 .nome(model.getNome())
                 .descricao(model.getDescricao())
+                .idInstituicao(model.getIdInstituicao())
+                .tipoInstituicao(model.getTipoInstituicao())
+                .sistema(model.getSistema())
+                .personalizado(model.getPersonalizado())
                 .ativo(model.getAtivo())
                 .build();
     }
@@ -56,6 +60,10 @@ public class CargoFacade {
         model.setIdCargo(cargo.getIdCargo());
         model.setNome(cargo.getNome());
         model.setDescricao(cargo.getDescricao());
+        model.setIdInstituicao(cargo.getIdInstituicao());
+        model.setTipoInstituicao(cargo.getTipoInstituicao());
+        model.setSistema(cargo.getSistema());
+        model.setPersonalizado(cargo.getPersonalizado());
         model.setAtivo(cargo.getAtivo());
         return model;
     }

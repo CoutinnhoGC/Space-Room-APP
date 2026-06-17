@@ -40,6 +40,7 @@ public class UsuarioApplication {
     public Usuario criar(Usuario usuario, Boolean podeReservar) {
         if (autorizacaoApplication != null) {
             autorizacaoApplication.validarAcessoInstituicao(usuario.getIdInstituicao());
+            autorizacaoApplication.validarGerenciamentoUsuario(null, usuario);
         }
         String emailNormalizado = normalizarEmail(usuario.getEmail());
         usuario.setEmail(emailNormalizado);
@@ -81,6 +82,7 @@ public class UsuarioApplication {
         validarEmailDuplicado(emailNormalizado, idUsuario);
         if (autorizacaoApplication != null) {
             autorizacaoApplication.validarAcessoInstituicao(dadosAtualizados.getIdInstituicao());
+            autorizacaoApplication.validarGerenciamentoUsuario(usuarioExistente, dadosAtualizados);
         }
 
         usuarioExistente.setIdInstituicao(dadosAtualizados.getIdInstituicao());
@@ -101,6 +103,9 @@ public class UsuarioApplication {
 
     public void deletar(Long idUsuario) {
         Usuario usuario = buscarPorId(idUsuario);
+        if (autorizacaoApplication != null) {
+            autorizacaoApplication.validarGerenciamentoUsuario(usuario, usuario);
+        }
         usuarioRepository.delete(usuario);
     }
 

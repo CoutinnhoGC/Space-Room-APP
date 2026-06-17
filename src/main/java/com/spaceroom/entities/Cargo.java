@@ -2,6 +2,8 @@ package com.spaceroom.entities;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -31,6 +33,19 @@ public class Cargo {
 
     @Column(name = "descricao", columnDefinition = "TEXT")
     private String descricao;
+
+    @Column(name = "id_instituicao")
+    private Long idInstituicao;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_instituicao")
+    private TipoInstituicao tipoInstituicao;
+
+    @Column(name = "sistema", nullable = false)
+    private Boolean sistema;
+
+    @Column(name = "personalizado", nullable = false)
+    private Boolean personalizado;
 
     @Column(name = "ativo", nullable = false)
     private Boolean ativo;

@@ -44,6 +44,10 @@ public class AutorizacaoApplication {
         return possuiPermissao(usuario, PermissionCodes.GERENCIAR_INSTITUICOES);
     }
 
+    public boolean cargoConcedeAdminPlataforma(Integer idCargo) {
+        return buscarPermissaoCargo(idCargo, PermissionCodes.GERENCIAR_INSTITUICOES).orElse(false);
+    }
+
     public boolean podeReservar(Usuario usuario) {
         return possuiPermissao(usuario, PermissionCodes.RESERVAR_ESPACO);
     }
@@ -96,6 +100,33 @@ public class AutorizacaoApplication {
 
     public void validarAcessoUsuario(Usuario usuarioAlvo) {
         validarAcessoInstituicao(usuarioAlvo.getIdInstituicao());
+    }
+
+    public void validarGerenciamentoUsuario(Usuario usuarioExistente, Usuario dadosSolicitados) {
+        Usuario usuarioAtual = obterUsuarioAtualObrigatorio();
+        boolean adminPlataforma = isAdminPlataforma(usuarioAtual);
+
+        if (!adminPlataforma && !podeGerenciarUsuarios(usuarioAtual)) {
+            throw new BusinessException("Voce nao possui permissao para gerenciar usuarios.");
+        }
+
+        boolean alvoAtualAdminPlataforma = usuarioExistente != null && isAdminPlataforma(usuarioExistente);
+        boolean cargoSolicitadoAdminPlataforma = dadosSolicitados != null && cargoConcedeAdminPlataforma(dadosSolicitados.getIdCargo());
+        if (!adminPlataforma && (alvoAtualAdminPlataforma || cargoSolicitadoAdminPlataforma)) {
+            throw new BusinessException("Somente administradores da plataforma podem criar, alterar ou remover administradores da plataforma.");
+        }
+
+        if (adminPlataforma || dadosSolicitados == null) {
+            return;
+        }
+
+        if (!usuarioAtual.getIdInstituicao().equals(dadosSolicitados.getIdInstituicao())) {
+            throw new BusinessException("Voce so pode gerenciar usuarios da sua propria instituicao.");
+        }
+
+        if (usuarioExistente != null && !usuarioAtual.getIdInstituicao().equals(usuarioExistente.getIdInstituicao())) {
+            throw new BusinessException("Voce so pode gerenciar usuarios da sua propria instituicao.");
+        }
     }
 
     public void validarAcessoEspaco(Espaco espaco) {
