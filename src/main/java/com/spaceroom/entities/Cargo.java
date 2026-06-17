@@ -41,10 +41,10 @@ public class Cargo {
     @Column(name = "tipo_instituicao")
     private TipoInstituicao tipoInstituicao;
 
-    @Column(name = "sistema", nullable = false)
+    @Column(name = "sistema")
     private Boolean sistema;
 
-    @Column(name = "personalizado", nullable = false)
+    @Column(name = "personalizado")
     private Boolean personalizado;
 
     @Column(name = "ativo", nullable = false)
