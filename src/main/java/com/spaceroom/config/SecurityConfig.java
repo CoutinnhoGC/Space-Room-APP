@@ -48,6 +48,7 @@ public class SecurityConfig {
                         })
                 )
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.GET, "/health").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/login", "/auth/forgot-password").permitAll()
                         .anyRequest().authenticated()
                 )
