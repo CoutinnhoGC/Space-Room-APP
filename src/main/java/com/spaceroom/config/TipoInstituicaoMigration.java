@@ -8,6 +8,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 
 import com.spaceroom.entities.TipoInstituicao;
 
@@ -20,6 +22,7 @@ public class TipoInstituicaoMigration {
     private final JdbcTemplate jdbcTemplate;
 
     @Bean
+    @Order(Ordered.HIGHEST_PRECEDENCE)
     public ApplicationRunner syncTipoInstituicaoEnum() {
         return args -> {
             String databaseName = jdbcTemplate.execute((ConnectionCallback<String>) connection -> connection.getMetaData().getDatabaseProductName());
@@ -31,18 +34,16 @@ public class TipoInstituicaoMigration {
                     "select exists (select 1 from pg_type where typname = 'tipo_instituicao')",
                     Boolean.class
             );
-            if (!Boolean.TRUE.equals(enumExists)) {
-                return;
+            if (Boolean.TRUE.equals(enumExists)) {
+                jdbcTemplate.execute("alter type tipo_instituicao add value if not exists 'INSTITUICAO_ENSINO'");
+                jdbcTemplate.execute("alter type tipo_instituicao add value if not exists 'ORGAO_PUBLICO'");
+                jdbcTemplate.execute("alter type tipo_instituicao add value if not exists 'CENTRO_PESQUISA'");
+                jdbcTemplate.update("""
+                        update instituicao
+                        set tipo = 'INSTITUICAO_ENSINO'::tipo_instituicao
+                        where tipo::text in ('ESCOLA', 'FACULDADE', 'UNIVERSIDADE', 'SENAI')
+                        """);
             }
-
-            jdbcTemplate.execute("alter type tipo_instituicao add value if not exists 'INSTITUICAO_ENSINO'");
-            jdbcTemplate.execute("alter type tipo_instituicao add value if not exists 'ORGAO_PUBLICO'");
-            jdbcTemplate.execute("alter type tipo_instituicao add value if not exists 'CENTRO_PESQUISA'");
-            jdbcTemplate.update("""
-                    update instituicao
-                    set tipo = 'INSTITUICAO_ENSINO'::tipo_instituicao
-                    where tipo::text in ('ESCOLA', 'FACULDADE', 'UNIVERSIDADE', 'SENAI')
-                    """);
             sincronizarCargoTipoInstituicaoCheck();
             LOGGER.info("TipoInstituicao enum sincronizado com categorias atuais.");
         };
