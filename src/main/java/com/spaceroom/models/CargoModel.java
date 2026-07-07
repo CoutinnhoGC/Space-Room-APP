@@ -11,7 +11,7 @@ public class CargoModel {
 
     private Integer idCargo;
 
-    @NotBlank(message = "O nome e obrigatorio.")
+    @NotBlank(message = "O nome é obrigatório.")
     private String nome;
 
     private String descricao;

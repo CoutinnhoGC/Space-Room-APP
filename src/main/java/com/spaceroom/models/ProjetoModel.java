@@ -14,10 +14,10 @@ public class ProjetoModel {
 
     private Long idProjeto;
 
-    @NotNull(message = "O id da instituicao e obrigatorio.")
+    @NotNull(message = "O id da instituição é obrigatório.")
     private Long idInstituicao;
 
-    @NotBlank(message = "O titulo e obrigatorio.")
+    @NotBlank(message = "O título é obrigatório.")
     private String titulo;
 
     private String resumo;
@@ -26,7 +26,7 @@ public class ProjetoModel {
     private String linkExterno;
     private StatusProjeto status;
 
-    @NotNull(message = "O id do criador e obrigatorio.")
+    @NotNull(message = "O id do criador é obrigatório.")
     private Long criadoPor;
 
     private LocalDateTime criadoEm;

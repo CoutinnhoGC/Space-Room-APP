@@ -25,7 +25,7 @@ public class ReservaEquipamentoApplication {
     public ReservaEquipamento buscarPorId(Long idReservaEquipamento) {
         return reservaEquipamentoRepository.findById(idReservaEquipamento)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "ReservaEquipamento nao encontrado para o id: " + idReservaEquipamento
+                        "Equipamento da reserva não encontrado para o id: " + idReservaEquipamento
                 ));
     }
 

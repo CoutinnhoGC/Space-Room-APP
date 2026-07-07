@@ -25,7 +25,7 @@ public class HorarioFuncionamentoEspacoApplication {
     public HorarioFuncionamentoEspaco buscarPorId(Long idHorario) {
         return horarioFuncionamentoEspacoRepository.findById(idHorario)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "HorarioFuncionamentoEspaco nao encontrado para o id: " + idHorario
+                        "Horário de funcionamento do espaço não encontrado para o id: " + idHorario
                 ));
     }
 

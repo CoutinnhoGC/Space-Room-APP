@@ -8,9 +8,9 @@ import lombok.Setter;
 @Setter
 public class CargoPermissaoModel {
 
-    @NotNull(message = "O id do cargo e obrigatorio.")
+    @NotNull(message = "O id do cargo é obrigatório.")
     private Integer idCargo;
 
-    @NotNull(message = "O id da permissao e obrigatorio.")
+    @NotNull(message = "O id da permissão é obrigatório.")
     private Integer idPermissao;
 }

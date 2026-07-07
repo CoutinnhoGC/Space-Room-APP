@@ -12,9 +12,12 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Pattern;
 
 @Service
 public class UsuarioApplication {
+
+    private static final Pattern NOME_COMPLETO_PATTERN = Pattern.compile("^[\\p{L}]+(?:[ -][\\p{L}]+)*$");
 
     private final UsuarioRepository usuarioRepository;
     private final AutorizacaoApplication autorizacaoApplication;
@@ -42,6 +45,7 @@ public class UsuarioApplication {
             autorizacaoApplication.validarAcessoInstituicao(usuario.getIdInstituicao());
             autorizacaoApplication.validarGerenciamentoUsuario(null, usuario);
         }
+        usuario.setNome(normalizarNome(usuario.getNome()));
         String emailNormalizado = normalizarEmail(usuario.getEmail());
         usuario.setEmail(emailNormalizado);
         validarEmailDuplicado(emailNormalizado, null);
@@ -64,7 +68,7 @@ public class UsuarioApplication {
 
     public Usuario buscarPorId(Long idUsuario) {
         Usuario usuario = usuarioRepository.findById(idUsuario)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario nao encontrado para o id: " + idUsuario));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado para o id: " + idUsuario));
         if (autorizacaoApplication != null) {
             autorizacaoApplication.validarAcessoUsuario(usuario);
         }
@@ -87,7 +91,7 @@ public class UsuarioApplication {
 
         usuarioExistente.setIdInstituicao(dadosAtualizados.getIdInstituicao());
         usuarioExistente.setIdCargo(dadosAtualizados.getIdCargo());
-        usuarioExistente.setNome(dadosAtualizados.getNome());
+        usuarioExistente.setNome(normalizarNome(dadosAtualizados.getNome()));
         usuarioExistente.setEmail(emailNormalizado);
         usuarioExistente.setSenhaHash(prepararSenha(dadosAtualizados.getSenhaHash(), usuarioExistente.getSenhaHash(), false));
         usuarioExistente.setPrimeiroAcesso(dadosAtualizados.getPrimeiroAcesso());
@@ -142,7 +146,7 @@ public class UsuarioApplication {
         usuarioRepository.findByEmail(email).ifPresent(usuario -> {
             boolean emailPertenceOutroUsuario = idUsuarioAtual == null || !usuario.getIdUsuario().equals(idUsuarioAtual);
             if (emailPertenceOutroUsuario) {
-                throw new BusinessException("Ja existe usuario cadastrado com o email informado.");
+                throw new BusinessException("Já existe usuário cadastrado com o e-mail informado.");
             }
         });
     }
@@ -159,6 +163,27 @@ public class UsuarioApplication {
         }
 
         return email.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private String normalizarNome(String nome) {
+        if (nome == null) {
+            throw new BusinessException("O nome é obrigatório.");
+        }
+
+        String nomeNormalizado = nome.trim().replaceAll("\\s+", " ");
+        if (nomeNormalizado.isBlank()) {
+            throw new BusinessException("O nome é obrigatório.");
+        }
+
+        if (!NOME_COMPLETO_PATTERN.matcher(nomeNormalizado).matches()) {
+            throw new BusinessException("O nome completo deve conter apenas letras, acentos, espaços e hífen.");
+        }
+
+        if (!nomeNormalizado.contains(" ")) {
+            throw new BusinessException("Informe nome e sobrenome.");
+        }
+
+        return nomeNormalizado;
     }
 
     private String prepararSenha(String senhaRecebida, String senhaAtual, boolean obrigatoria) {

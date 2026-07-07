@@ -35,7 +35,7 @@ public class AuthApplication {
                 .orElseThrow(() -> credenciaisInvalidas(emailNormalizado, clientIp));
 
         if (Boolean.FALSE.equals(usuario.getAtivo())) {
-            throw new BusinessException("Este usuario esta inativo.");
+            throw new BusinessException("Este usuário está inativo.");
         }
 
         if (!senhaConfere(usuario, senha)) {

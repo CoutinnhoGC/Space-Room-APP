@@ -66,7 +66,18 @@ public class UsuarioApplicationTest {
         BusinessException exception = assertThrows(BusinessException.class, () -> usuarioApplication.criar(novo));
 
         /* ========== Verificacoes ========== */
-        assertThat(exception.getMessage(), is("Ja existe usuario cadastrado com o email informado."));
+        assertThat(exception.getMessage(), is("Já existe usuário cadastrado com o e-mail informado."));
+        verify(usuarioRepository, never()).save(any());
+    }
+
+    @Test
+    void testCriarUsuario_NomeComNumero() {
+        Usuario usuario = novoUsuario(1L, "numero@spaceroom.com");
+        usuario.setNome("Ana 123");
+
+        BusinessException exception = assertThrows(BusinessException.class, () -> usuarioApplication.criar(usuario));
+
+        assertThat(exception.getMessage(), is("O nome completo deve conter apenas letras, acentos, espaços e hífen."));
         verify(usuarioRepository, never()).save(any());
     }
 
@@ -107,7 +118,7 @@ public class UsuarioApplicationTest {
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> usuarioApplication.buscarPorId(99L));
 
         /* ========== Verificacoes ========== */
-        assertThat(exception.getMessage(), is("Usuario nao encontrado para o id: 99"));
+        assertThat(exception.getMessage(), is("Usuário não encontrado para o id: 99"));
     }
 
     @Test
@@ -139,7 +150,7 @@ public class UsuarioApplicationTest {
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> usuarioApplication.atualizar(1L, novoUsuario(1L, "x@x.com")));
 
         /* ========== Verificacoes ========== */
-        assertThat(exception.getMessage(), is("Usuario nao encontrado para o id: 1"));
+        assertThat(exception.getMessage(), is("Usuário não encontrado para o id: 1"));
     }
 
     @Test
@@ -157,7 +168,7 @@ public class UsuarioApplicationTest {
         BusinessException exception = assertThrows(BusinessException.class, () -> usuarioApplication.atualizar(1L, atualizado));
 
         /* ========== Verificacoes ========== */
-        assertThat(exception.getMessage(), is("Ja existe usuario cadastrado com o email informado."));
+        assertThat(exception.getMessage(), is("Já existe usuário cadastrado com o e-mail informado."));
         verify(usuarioRepository, never()).save(any());
     }
 
@@ -300,7 +311,7 @@ public class UsuarioApplicationTest {
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> usuarioApplication.buscarPorId(123L));
 
         /* ========== Verificacoes ========== */
-        assertThat(exception.getMessage(), is("Usuario nao encontrado para o id: 123"));
+        assertThat(exception.getMessage(), is("Usuário não encontrado para o id: 123"));
     }
 
     @Test

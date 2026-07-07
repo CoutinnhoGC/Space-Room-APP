@@ -15,23 +15,23 @@ public class ReservaModel {
 
     private Long idReserva;
 
-    @NotNull(message = "O id da instituicao e obrigatorio.")
+    @NotNull(message = "O id da instituição é obrigatório.")
     private Long idInstituicao;
 
-    @NotNull(message = "O id do usuario e obrigatorio.")
+    @NotNull(message = "O id do usuário é obrigatório.")
     private Long idUsuario;
 
-    @NotNull(message = "O id do espaco e obrigatorio.")
+    @NotNull(message = "O id do espaço é obrigatório.")
     private Long idEspaco;
 
     private Long idSubespaco;
 
-    @NotBlank(message = "O titulo e obrigatorio.")
-    @Size(max = 150, message = "O titulo deve ter no maximo 150 caracteres.")
+    @NotBlank(message = "O título é obrigatório.")
+    @Size(max = 150, message = "O título deve ter no máximo 150 caracteres.")
     private String titulo;
 
     @NotBlank(message = "A finalidade e obrigatoria.")
-    @Size(max = 500, message = "A finalidade deve ter no maximo 500 caracteres.")
+    @Size(max = 500, message = "A finalidade deve ter no máximo 500 caracteres.")
     private String finalidade;
 
     @NotNull(message = "A data de inicio e obrigatoria.")
@@ -42,7 +42,7 @@ public class ReservaModel {
 
     private StatusReserva status;
 
-    @Size(max = 500, message = "A observacao deve ter no maximo 500 caracteres.")
+    @Size(max = 500, message = "A observação deve ter no máximo 500 caracteres.")
     private String observacao;
 
     private LocalDateTime criadoEm;

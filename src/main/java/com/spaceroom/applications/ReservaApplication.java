@@ -11,10 +11,14 @@ import com.spaceroom.repositories.ReservaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
 public class ReservaApplication {
+
+    private static final long DURACAO_MINIMA_RESERVA_MINUTOS = 30;
 
     private final ReservaRepository reservaRepository;
     private final EspacoRepository espacoRepository;
@@ -55,7 +59,7 @@ public class ReservaApplication {
 
     public Reserva buscarPorId(Long idReserva) {
         Reserva reserva = reservaRepository.findById(idReserva)
-                .orElseThrow(() -> new ResourceNotFoundException("Reserva nao encontrada para o id: " + idReserva));
+                .orElseThrow(() -> new ResourceNotFoundException("Reserva não encontrada para o id: " + idReserva));
         if (autorizacaoApplication != null) {
             autorizacaoApplication.validarAcessoReserva(reserva);
         }
@@ -65,6 +69,16 @@ public class ReservaApplication {
     public Reserva atualizar(Long idReserva, Reserva dadosAtualizados) {
         validarAutorizacao(dadosAtualizados);
         Reserva reservaExistente = buscarPorId(idReserva);
+
+        if (dadosAtualizados.getStatus() == StatusReserva.CANCELADA) {
+            if (reservaExistente.getStatus() == StatusReserva.CANCELADA) {
+                throw new BusinessException("Esta reserva já está cancelada.");
+            }
+
+            reservaExistente.setStatus(StatusReserva.CANCELADA);
+            reservaExistente.setObservacao(dadosAtualizados.getObservacao());
+            return reservaRepository.save(reservaExistente);
+        }
 
         validarCamposObrigatorios(dadosAtualizados);
         validarDatas(dadosAtualizados);
@@ -92,7 +106,7 @@ public class ReservaApplication {
 
     private void validarCamposObrigatorios(Reserva reserva) {
         if (reserva.getTitulo() == null || reserva.getTitulo().isBlank()) {
-            throw new BusinessException("O titulo e obrigatorio.");
+            throw new BusinessException("O título é obrigatório.");
         }
 
         if (reserva.getFinalidade() == null || reserva.getFinalidade().isBlank()) {
@@ -108,6 +122,15 @@ public class ReservaApplication {
         if (!reserva.getDataFim().isAfter(reserva.getDataInicio())) {
             throw new BusinessException("A data fim deve ser maior que a data inicio.");
         }
+
+        if (reserva.getDataInicio().toLocalDate().isBefore(LocalDate.now())) {
+            throw new BusinessException("Não é permitido realizar reservas em datas passadas.");
+        }
+
+        long duracaoMinutos = Duration.between(reserva.getDataInicio(), reserva.getDataFim()).toMinutes();
+        if (duracaoMinutos < DURACAO_MINIMA_RESERVA_MINUTOS) {
+            throw new BusinessException("A reserva deve ter duracao minima de " + DURACAO_MINIMA_RESERVA_MINUTOS + " minutos.");
+        }
     }
 
     private void validarSubespaco(Reserva reserva) {
@@ -116,14 +139,14 @@ public class ReservaApplication {
         }
 
         Espaco espacoPrincipal = espacoRepository.findById(reserva.getIdEspaco())
-                .orElseThrow(() -> new ResourceNotFoundException("Espaco nao encontrado para o id: " + reserva.getIdEspaco()));
+                .orElseThrow(() -> new ResourceNotFoundException("Espaço não encontrado para o id: " + reserva.getIdEspaco()));
 
         if (autorizacaoApplication != null) {
             autorizacaoApplication.validarAcessoEspaco(espacoPrincipal);
         }
 
         if (espacoPrincipal.getIdEspacoPai() != null) {
-            throw new BusinessException("Selecione o espaco principal e, se necessario, informe o subespaco separadamente.");
+            throw new BusinessException("Selecione o espaço principal e, se necessário, informe o subespaço separadamente.");
         }
 
         if (reserva.getIdSubespaco() == null) {
@@ -131,10 +154,10 @@ public class ReservaApplication {
         }
 
         Espaco subespaco = espacoRepository.findById(reserva.getIdSubespaco())
-                .orElseThrow(() -> new ResourceNotFoundException("Subespaco nao encontrado para o id: " + reserva.getIdSubespaco()));
+                .orElseThrow(() -> new ResourceNotFoundException("Subespaço não encontrado para o id: " + reserva.getIdSubespaco()));
 
         if (!reserva.getIdEspaco().equals(subespaco.getIdEspacoPai())) {
-            throw new BusinessException("O subespaco selecionado nao pertence ao espaco principal informado.");
+            throw new BusinessException("O subespaço selecionado não pertence ao espaço principal informado.");
         }
     }
 
@@ -147,7 +170,7 @@ public class ReservaApplication {
             );
 
             if (existeConflito) {
-                throw new BusinessException("Ja existe uma reserva para este espaco nesse intervalo.");
+                throw new BusinessException("Já existe uma reserva para este espaço nesse intervalo.");
             }
             return;
         }
@@ -157,7 +180,7 @@ public class ReservaApplication {
                 .anyMatch(item -> possuiConflito(reserva, item));
 
         if (existeConflito) {
-            throw new BusinessException("Ja existe uma reserva para este espaco ou subespaco nesse intervalo.");
+            throw new BusinessException("Já existe uma reserva para este espaço ou subespaço nesse intervalo.");
         }
     }
 
@@ -169,7 +192,7 @@ public class ReservaApplication {
                     .anyMatch(item -> possuiConflito(reserva, item));
 
             if (existeConflito) {
-                throw new BusinessException("Ja existe uma reserva para este espaco nesse intervalo.");
+                throw new BusinessException("Já existe uma reserva para este espaço nesse intervalo.");
             }
             return;
         }
@@ -180,7 +203,7 @@ public class ReservaApplication {
                 .anyMatch(item -> possuiConflito(reserva, item));
 
         if (existeConflito) {
-            throw new BusinessException("Ja existe uma reserva para este espaco ou subespaco nesse intervalo.");
+            throw new BusinessException("Já existe uma reserva para este espaço ou subespaço nesse intervalo.");
         }
     }
 

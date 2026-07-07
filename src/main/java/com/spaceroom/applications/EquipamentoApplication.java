@@ -25,7 +25,7 @@ public class EquipamentoApplication {
     public Equipamento buscarPorId(Long idEquipamento) {
         return equipamentoRepository.findById(idEquipamento)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Equipamento nao encontrado para o id: " + idEquipamento
+                        "Equipamento não encontrado para o id: " + idEquipamento
                 ));
     }
 

@@ -10,10 +10,10 @@ public class ProjetoIntegranteModel {
 
     private Long idProjetoIntegrante;
 
-    @NotNull(message = "O id do projeto e obrigatorio.")
+    @NotNull(message = "O id do projeto é obrigatório.")
     private Long idProjeto;
 
-    @NotNull(message = "O id do usuario e obrigatorio.")
+    @NotNull(message = "O id do usuário é obrigatório.")
     private Long idUsuario;
 
     private String funcao;

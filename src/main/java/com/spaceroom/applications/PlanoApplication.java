@@ -25,7 +25,7 @@ public class PlanoApplication {
     public Plano buscarPorId(Integer idPlano) {
         return planoRepository.findById(idPlano)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Plano nao encontrado para o id: " + idPlano
+                        "Plano não encontrado para o id: " + idPlano
                 ));
     }
 

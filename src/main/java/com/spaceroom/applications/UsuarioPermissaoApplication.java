@@ -27,7 +27,7 @@ public class UsuarioPermissaoApplication {
         UsuarioPermissaoId id = new UsuarioPermissaoId(idUsuario, idPermissao);
         return usuarioPermissaoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "UsuarioPermissao nao encontrada para idUsuario: " + idUsuario + " e idPermissao: " + idPermissao
+                        "Permissão do usuário não encontrada para idUsuario: " + idUsuario + " e idPermissao: " + idPermissao
                 ));
     }
 

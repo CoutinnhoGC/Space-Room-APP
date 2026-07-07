@@ -25,7 +25,7 @@ public class ProjetoApplication {
     public Projeto buscarPorId(Long idProjeto) {
         return projetoRepository.findById(idProjeto)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Projeto nao encontrado para o id: " + idProjeto
+                        "Projeto não encontrado para o id: " + idProjeto
                 ));
     }
 

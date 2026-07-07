@@ -1,6 +1,7 @@
 package com.spaceroom.applications;
 
 import com.spaceroom.entities.Instituicao;
+import com.spaceroom.entities.TipoInstituicao;
 import com.spaceroom.entities.Usuario;
 import com.spaceroom.exceptions.ResourceNotFoundException;
 import com.spaceroom.repositories.InstituicaoRepository;
@@ -18,6 +19,7 @@ public class InstituicaoApplication {
 
     public Instituicao criar(Instituicao instituicao) {
         autorizacaoApplication.validarCriacaoInstituicao();
+        instituicao.setTipo(normalizarTipoInstituicao(instituicao.getTipo()));
         return instituicaoRepository.save(instituicao);
     }
 
@@ -31,7 +33,7 @@ public class InstituicaoApplication {
 
     public Instituicao buscarPorId(Long idInstituicao) {
         Instituicao instituicao = instituicaoRepository.findById(idInstituicao)
-                .orElseThrow(() -> new ResourceNotFoundException("Instituicao nao encontrada para o id: " + idInstituicao));
+                .orElseThrow(() -> new ResourceNotFoundException("Instituição não encontrada para o id: " + idInstituicao));
         autorizacaoApplication.validarAcessoInstituicao(instituicao.getIdInstituicao());
         return instituicao;
     }
@@ -51,7 +53,7 @@ public class InstituicaoApplication {
         instituicaoExistente.setCidade(dadosAtualizados.getCidade());
         instituicaoExistente.setEstado(dadosAtualizados.getEstado());
         instituicaoExistente.setCep(dadosAtualizados.getCep());
-        instituicaoExistente.setTipo(dadosAtualizados.getTipo());
+        instituicaoExistente.setTipo(normalizarTipoInstituicao(dadosAtualizados.getTipo()));
         instituicaoExistente.setVitrineHabilitada(dadosAtualizados.getVitrineHabilitada());
         instituicaoExistente.setAtivo(dadosAtualizados.getAtivo());
 
@@ -62,5 +64,16 @@ public class InstituicaoApplication {
         autorizacaoApplication.validarCriacaoInstituicao();
         Instituicao instituicao = buscarPorId(idInstituicao);
         instituicaoRepository.delete(instituicao);
+    }
+
+    private TipoInstituicao normalizarTipoInstituicao(TipoInstituicao tipo) {
+        if (tipo == null) {
+            return TipoInstituicao.OUTRO;
+        }
+
+        return switch (tipo) {
+            case ESCOLA, FACULDADE, UNIVERSIDADE, SENAI -> TipoInstituicao.INSTITUICAO_ENSINO;
+            default -> tipo;
+        };
     }
 }

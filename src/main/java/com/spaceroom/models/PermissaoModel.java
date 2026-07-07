@@ -10,7 +10,7 @@ public class PermissaoModel {
 
     private Integer idPermissao;
 
-    @NotBlank(message = "O nome e obrigatorio.")
+    @NotBlank(message = "O nome é obrigatório.")
     private String nome;
 
     private String descricao;

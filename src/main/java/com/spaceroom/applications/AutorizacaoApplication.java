@@ -33,11 +33,11 @@ public class AutorizacaoApplication {
     public Usuario obterUsuarioAtualObrigatorio() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !(authentication.getPrincipal() instanceof AuthenticatedUser principal)) {
-            throw new BusinessException("Usuario autenticado e obrigatorio para esta operacao.");
+            throw new BusinessException("Usuário autenticado é obrigatório para esta operação.");
         }
 
         return usuarioRepository.findById(principal.idUsuario())
-                .orElseThrow(() -> new BusinessException("Usuario autenticado nao encontrado."));
+                .orElseThrow(() -> new BusinessException("Usuário autenticado não encontrado."));
     }
 
     public boolean isAdminPlataforma(Usuario usuario) {
@@ -83,7 +83,7 @@ public class AutorizacaoApplication {
     public void validarCriacaoInstituicao() {
         Usuario usuarioAtual = obterUsuarioAtualObrigatorio();
         if (!isAdminPlataforma(usuarioAtual)) {
-            throw new BusinessException("Somente os administradores da plataforma podem cadastrar instituicoes.");
+            throw new BusinessException("Somente os administradores da plataforma podem cadastrar instituições.");
         }
     }
 
@@ -94,7 +94,7 @@ public class AutorizacaoApplication {
         }
 
         if (!usuarioAtual.getIdInstituicao().equals(idInstituicao)) {
-            throw new BusinessException("Voce so pode acessar dados da sua propria instituicao.");
+            throw new BusinessException("Você só pode acessar dados da sua própria instituição.");
         }
     }
 
@@ -107,7 +107,7 @@ public class AutorizacaoApplication {
         boolean adminPlataforma = isAdminPlataforma(usuarioAtual);
 
         if (!adminPlataforma && !podeGerenciarUsuarios(usuarioAtual)) {
-            throw new BusinessException("Voce nao possui permissao para gerenciar usuarios.");
+            throw new BusinessException("Você não possui permissão para gerenciar usuários.");
         }
 
         boolean alvoAtualAdminPlataforma = usuarioExistente != null && isAdminPlataforma(usuarioExistente);
@@ -121,11 +121,11 @@ public class AutorizacaoApplication {
         }
 
         if (!usuarioAtual.getIdInstituicao().equals(dadosSolicitados.getIdInstituicao())) {
-            throw new BusinessException("Voce so pode gerenciar usuarios da sua propria instituicao.");
+            throw new BusinessException("Você só pode gerenciar usuários da sua própria instituição.");
         }
 
         if (usuarioExistente != null && !usuarioAtual.getIdInstituicao().equals(usuarioExistente.getIdInstituicao())) {
-            throw new BusinessException("Voce so pode gerenciar usuarios da sua propria instituicao.");
+            throw new BusinessException("Você só pode gerenciar usuários da sua própria instituição.");
         }
     }
 
@@ -140,11 +140,11 @@ public class AutorizacaoApplication {
         }
 
         if (!usuarioAtual.getIdInstituicao().equals(reserva.getIdInstituicao())) {
-            throw new BusinessException("Voce so pode acessar reservas da sua propria instituicao.");
+            throw new BusinessException("Você só pode acessar reservas da sua própria instituição.");
         }
 
         if (!usuarioAtual.getIdUsuario().equals(reserva.getIdUsuario()) && !podeReservar(usuarioAtual)) {
-            throw new BusinessException("Voce nao possui permissao para acessar esta reserva.");
+            throw new BusinessException("Você não possui permissão para acessar esta reserva.");
         }
     }
 
@@ -152,16 +152,16 @@ public class AutorizacaoApplication {
         Usuario usuarioAtual = obterUsuarioAtualObrigatorio();
 
         if (!usuarioAtual.getIdInstituicao().equals(reserva.getIdInstituicao())) {
-            throw new BusinessException("Voce so pode reservar espacos da sua propria instituicao.");
+            throw new BusinessException("Você só pode reservar espaços da sua própria instituição.");
         }
 
         if (!podeReservar(usuarioAtual)) {
-            throw new BusinessException("Seu usuario nao possui permissao para criar reservas.");
+            throw new BusinessException("Seu usuário não possui permissão para criar reservas.");
         }
 
         boolean adminPlataforma = isAdminPlataforma(usuarioAtual);
         if (!adminPlataforma && !usuarioAtual.getIdUsuario().equals(reserva.getIdUsuario())) {
-            throw new BusinessException("Voce so pode criar reservas em seu proprio nome.");
+            throw new BusinessException("Você só pode criar reservas em seu próprio nome.");
         }
     }
 
@@ -224,7 +224,7 @@ public class AutorizacaoApplication {
 
     private void sincronizarPermissaoUsuario(Long idUsuario, String nomePermissao, boolean valorSolicitado, boolean valorPadrao) {
         Permissao permissao = permissaoRepository.findByNome(nomePermissao)
-                .orElseThrow(() -> new BusinessException("Permissao obrigatoria nao encontrada: " + nomePermissao));
+                .orElseThrow(() -> new BusinessException("Permissão obrigatória não encontrada: " + nomePermissao));
 
         Optional<UsuarioPermissao> permissaoExistente = usuarioPermissaoRepository.findByIdUsuario(idUsuario)
                 .stream()

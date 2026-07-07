@@ -167,7 +167,7 @@ public class CargoApplicationTest {
         );
 
         /* ========== Verificacoes ========== */
-        assertThat(exception.getMessage(), is("Cargo nao encontrado para o id: 123"));
+        assertThat(exception.getMessage(), is("Cargo não encontrado para o id: 123"));
     }
 
     @Test
@@ -183,7 +183,7 @@ public class CargoApplicationTest {
         );
 
         /* ========== Verificacoes ========== */
-        assertThat(exception.getMessage(), is("Cargo nao encontrado para o id: 99"));
+        assertThat(exception.getMessage(), is("Cargo não encontrado para o id: 99"));
     }
 
     @Test

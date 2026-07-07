@@ -157,7 +157,7 @@ public class PlanoApplicationTest {
         );
 
         /* ========== Verificacoes ========== */
-        assertThat(exception.getMessage(), is("Plano nao encontrado para o id: 123"));
+        assertThat(exception.getMessage(), is("Plano não encontrado para o id: 123"));
     }
 
     @Test
@@ -173,7 +173,7 @@ public class PlanoApplicationTest {
         );
 
         /* ========== Verificacoes ========== */
-        assertThat(exception.getMessage(), is("Plano nao encontrado para o id: 404"));
+        assertThat(exception.getMessage(), is("Plano não encontrado para o id: 404"));
     }
 
     @Test

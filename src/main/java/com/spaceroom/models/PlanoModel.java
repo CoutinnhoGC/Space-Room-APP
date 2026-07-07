@@ -14,10 +14,10 @@ public class PlanoModel {
 
     private Integer idPlano;
 
-    @NotBlank(message = "O nome e obrigatorio.")
+    @NotBlank(message = "O nome é obrigatório.")
     private String nome;
 
-    @NotNull(message = "O valor e obrigatorio.")
+    @NotNull(message = "O valor é obrigatório.")
     private BigDecimal valor;
 
     private String descricao;

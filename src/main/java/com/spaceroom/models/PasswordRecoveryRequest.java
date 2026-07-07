@@ -9,7 +9,7 @@ import lombok.Setter;
 @Setter
 public class PasswordRecoveryRequest {
 
-    @NotBlank(message = "O email e obrigatorio.")
+    @NotBlank(message = "O e-mail é obrigatório.")
     @Email(message = "Informe um e-mail valido.")
     private String email;
 }

@@ -8,10 +8,10 @@ import lombok.Setter;
 @Setter
 public class UsuarioPermissaoModel {
 
-    @NotNull(message = "O id do usuario e obrigatorio.")
+    @NotNull(message = "O id do usuário é obrigatório.")
     private Long idUsuario;
 
-    @NotNull(message = "O id da permissao e obrigatorio.")
+    @NotNull(message = "O id da permissão é obrigatório.")
     private Integer idPermissao;
 
     private Boolean concedida;

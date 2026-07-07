@@ -27,7 +27,7 @@ public class CargoPermissaoApplication {
         CargoPermissaoId id = new CargoPermissaoId(idCargo, idPermissao);
         return cargoPermissaoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "CargoPermissao nao encontrada para idCargo: " + idCargo + " e idPermissao: " + idPermissao
+                        "CargoPermissão não encontrada para idCargo: " + idCargo + " e idPermissao: " + idPermissao
                 ));
     }
 

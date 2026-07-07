@@ -33,7 +33,7 @@ public class EspacoApplication {
 
     public Espaco buscarPorId(Long idEspaco) {
         Espaco espaco = espacoRepository.findById(idEspaco)
-                .orElseThrow(() -> new ResourceNotFoundException("Espaco nao encontrado para o id: " + idEspaco));
+                .orElseThrow(() -> new ResourceNotFoundException("Espaço não encontrado para o id: " + idEspaco));
         autorizacaoApplication.validarAcessoEspaco(espaco);
         return espaco;
     }
@@ -70,11 +70,11 @@ public class EspacoApplication {
 
         Espaco espacoPai = buscarPorId(espaco.getIdEspacoPai());
         if (espaco.getIdInstituicao() != null && !espaco.getIdInstituicao().equals(espacoPai.getIdInstituicao())) {
-            throw new BusinessException("O subespaco deve pertencer a mesma instituicao do espaco principal.");
+            throw new BusinessException("O subespaço deve pertencer à mesma instituição do espaço principal.");
         }
 
         if (Boolean.FALSE.equals(espacoPai.getPermiteSubespacos())) {
-            throw new BusinessException("O espaco principal selecionado nao esta habilitado para subespacos.");
+            throw new BusinessException("O espaço principal selecionado não está habilitado para subespaços.");
         }
     }
 }

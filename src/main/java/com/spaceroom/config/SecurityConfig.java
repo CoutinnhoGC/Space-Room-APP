@@ -39,12 +39,12 @@ public class SecurityConfig {
                         .authenticationEntryPoint((request, response, authException) -> {
                             response.setStatus(HttpStatus.UNAUTHORIZED.value());
                             response.setContentType("application/problem+json");
-                            response.getWriter().write("{\"title\":\"Nao autenticado\",\"detail\":\"Realize o login para acessar este recurso.\",\"status\":401}");
+                            response.getWriter().write("{\"title\":\"Não autenticado\",\"detail\":\"Realize o login para acessar este recurso.\",\"status\":401}");
                         })
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
                             response.setStatus(HttpStatus.FORBIDDEN.value());
                             response.setContentType("application/problem+json");
-                            response.getWriter().write("{\"title\":\"Acesso negado\",\"detail\":\"Voce nao possui permissao para executar esta operacao.\",\"status\":403}");
+                            response.getWriter().write("{\"title\":\"Acesso negado\",\"detail\":\"Você não possui permissão para executar esta operação.\",\"status\":403}");
                         })
                 )
                 .authorizeHttpRequests(auth -> auth

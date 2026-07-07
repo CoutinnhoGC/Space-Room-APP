@@ -12,10 +12,10 @@ public class HorarioFuncionamentoEspacoModel {
 
     private Long idHorario;
 
-    @NotNull(message = "O id do espaco e obrigatorio.")
+    @NotNull(message = "O id do espaço é obrigatório.")
     private Long idEspaco;
 
-    @NotNull(message = "O dia da semana e obrigatorio.")
+    @NotNull(message = "O dia da semana é obrigatório.")
     private Integer diaSemana;
 
     @NotNull(message = "A hora de inicio e obrigatoria.")

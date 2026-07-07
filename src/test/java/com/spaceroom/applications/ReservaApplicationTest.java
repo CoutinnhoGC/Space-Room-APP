@@ -13,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -75,7 +76,7 @@ public class ReservaApplicationTest {
 
         /* ========== Verificacoes ========== */
         // Verifica se a mensagem de erro está correta e se não tentou salvar
-        assertThat(exception.getMessage(), is("Data de início e data de fim são obrigatórias."));
+        assertThat(exception.getMessage(), is("Data de inicio e data de fim sao obrigatorias."));
         verify(reservaRepository, never()).save(any());
     }
 
@@ -93,7 +94,7 @@ public class ReservaApplicationTest {
         BusinessException exception = assertThrows(BusinessException.class, () -> reservaApplication.criar(reserva));
 
         /* ========== Verificacoes ========== */
-        assertThat(exception.getMessage(), is("Data de início e data de fim são obrigatórias."));
+        assertThat(exception.getMessage(), is("Data de inicio e data de fim sao obrigatorias."));
         verify(reservaRepository, never()).save(any());
     }
 
@@ -111,7 +112,7 @@ public class ReservaApplicationTest {
         BusinessException exception = assertThrows(BusinessException.class, () -> reservaApplication.criar(reserva));
 
         /* ========== Verificacoes ========== */
-        assertThat(exception.getMessage(), is("A data fim deve ser maior que a data início."));
+        assertThat(exception.getMessage(), is("A data fim deve ser maior que a data inicio."));
         verify(reservaRepository, never()).save(any());
     }
 
@@ -129,7 +130,7 @@ public class ReservaApplicationTest {
         BusinessException exception = assertThrows(BusinessException.class, () -> reservaApplication.criar(reserva));
 
         /* ========== Verificacoes ========== */
-        assertThat(exception.getMessage(), is("A data fim deve ser maior que a data início."));
+        assertThat(exception.getMessage(), is("A data fim deve ser maior que a data inicio."));
         verify(reservaRepository, never()).save(any());
     }
 
@@ -149,6 +150,29 @@ public class ReservaApplicationTest {
         /* ========== Verificacoes ========== */
         // Verifica se bloqueou a criação e retornou a mensagem correta
         assertThat(exception.getMessage(), is("Já existe uma reserva para este espaço nesse intervalo."));
+        verify(reservaRepository, never()).save(any());
+    }
+
+    @Test
+    void testCriarReserva_DataPassada() {
+        Reserva reserva = novaReserva(1L, 10, 12);
+        reserva.setDataInicio(LocalDate.now().minusDays(1).atTime(10, 0));
+        reserva.setDataFim(LocalDate.now().minusDays(1).atTime(11, 0));
+
+        BusinessException exception = assertThrows(BusinessException.class, () -> reservaApplication.criar(reserva));
+
+        assertThat(exception.getMessage(), is("Não é permitido realizar reservas em datas passadas."));
+        verify(reservaRepository, never()).save(any());
+    }
+
+    @Test
+    void testCriarReserva_DuracaoMenorQueTrintaMinutos() {
+        Reserva reserva = novaReserva(1L, 10, 12);
+        reserva.setDataFim(reserva.getDataInicio().plusMinutes(20));
+
+        BusinessException exception = assertThrows(BusinessException.class, () -> reservaApplication.criar(reserva));
+
+        assertThat(exception.getMessage(), is("A reserva deve ter duracao minima de 30 minutos."));
         verify(reservaRepository, never()).save(any());
     }
 
@@ -224,6 +248,39 @@ public class ReservaApplicationTest {
         /* ========== Verificacoes ========== */
         // Verifica se os dados foram realmente atualizados
         assertThat(resultado.getTitulo(), is("Nova Reserva"));
+    }
+
+    @Test
+    void testAtualizarReserva_CancelamentoNaoRevalidaDataPassada() {
+        Reserva existente = novaReserva(1L, 8, 9);
+        existente.setDataInicio(LocalDate.now().minusDays(2).atTime(8, 0));
+        existente.setDataFim(LocalDate.now().minusDays(2).atTime(9, 0));
+        Reserva cancelamento = novaReserva(1L, 8, 9);
+        cancelamento.setStatus(StatusReserva.CANCELADA);
+        cancelamento.setObservacao("Cancelada pelo responsavel");
+
+        when(reservaRepository.findById(1L)).thenReturn(Optional.of(existente));
+        when(reservaRepository.save(any(Reserva.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Reserva resultado = reservaApplication.atualizar(1L, cancelamento);
+
+        assertThat(resultado.getStatus(), is(StatusReserva.CANCELADA));
+        assertThat(resultado.getObservacao(), is("Cancelada pelo responsavel"));
+    }
+
+    @Test
+    void testAtualizarReserva_CancelamentoDuplicado() {
+        Reserva existente = novaReserva(1L, 8, 9);
+        existente.setStatus(StatusReserva.CANCELADA);
+        Reserva cancelamento = novaReserva(1L, 8, 9);
+        cancelamento.setStatus(StatusReserva.CANCELADA);
+
+        when(reservaRepository.findById(1L)).thenReturn(Optional.of(existente));
+
+        BusinessException exception = assertThrows(BusinessException.class, () -> reservaApplication.atualizar(1L, cancelamento));
+
+        assertThat(exception.getMessage(), is("Esta reserva já está cancelada."));
+        verify(reservaRepository, never()).save(any());
     }
 
     @Test
@@ -424,7 +481,7 @@ public class ReservaApplicationTest {
     }
 
     private Reserva novaReserva(Long id, int horaInicio, int horaFim) {
-        LocalDateTime base = LocalDateTime.of(2026, 3, 25, 0, 0);
+        LocalDateTime base = LocalDate.now().plusDays(1).atStartOfDay();
         return Reserva.builder()
                 .idReserva(id)
                 .idInstituicao(1L)

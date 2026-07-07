@@ -25,7 +25,7 @@ public class ProjetoIntegranteApplication {
     public ProjetoIntegrante buscarPorId(Long idProjetoIntegrante) {
         return projetoIntegranteRepository.findById(idProjetoIntegrante)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "ProjetoIntegrante nao encontrado para o id: " + idProjetoIntegrante
+                        "Integrante do projeto não encontrado para o id: " + idProjetoIntegrante
                 ));
     }
 

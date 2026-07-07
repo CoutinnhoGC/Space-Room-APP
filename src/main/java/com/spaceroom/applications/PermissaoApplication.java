@@ -25,7 +25,7 @@ public class PermissaoApplication {
     public Permissao buscarPorId(Integer idPermissao) {
         return permissaoRepository.findById(idPermissao)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Permissao nao encontrada para o id: " + idPermissao
+                        "Permissão não encontrada para o id: " + idPermissao
                 ));
     }
 

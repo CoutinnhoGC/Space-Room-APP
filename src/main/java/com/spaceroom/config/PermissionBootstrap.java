@@ -66,13 +66,16 @@ public class PermissionBootstrap {
     );
 
     private static final Map<TipoInstituicao, List<String>> CARGOS_PADRAO_POR_TIPO = Map.of(
+            TipoInstituicao.INSTITUICAO_ENSINO, List.of("Diretor", "Vice-diretor", "Coordenador", "Professor", "Aluno"),
             TipoInstituicao.ESCOLA, List.of("Diretor", "Vice-diretor", "Coordenador", "Professor", "Aluno"),
             TipoInstituicao.FACULDADE, List.of("Diretor", "Vice-diretor", "Coordenador", "Professor", "Aluno"),
             TipoInstituicao.UNIVERSIDADE, List.of("Diretor", "Vice-diretor", "Coordenador", "Professor", "Aluno"),
             TipoInstituicao.SENAI, List.of("Diretor", "Vice-diretor", "Coordenador", "Professor", "Aluno"),
             TipoInstituicao.EMPRESA, List.of("CEO", "Diretor", "Gerente", "Supervisor", "Colaborador"),
+            TipoInstituicao.ORGAO_PUBLICO, List.of("Gestor", "Coordenador", "Servidor"),
+            TipoInstituicao.CENTRO_PESQUISA, List.of("Coordenador", "Pesquisador", "Técnico"),
             TipoInstituicao.COWORKING, List.of("Gestor", "Recepcionista", "Membro"),
-            TipoInstituicao.OUTRO, List.of("Coordenador", "Pesquisador", "Tecnico")
+            TipoInstituicao.OUTRO, List.of("Coordenador", "Pesquisador", "Técnico")
     );
 
     private final PermissaoRepository permissaoRepository;
@@ -83,21 +86,21 @@ public class PermissionBootstrap {
     public ApplicationRunner seedDefaultPermissions() {
         return args -> {
             criarSeNaoExistir(PermissionCodes.GERENCIAR_INSTITUICOES,
-                    "Permite cadastrar e administrar instituicoes da plataforma.");
+                    "Permite cadastrar e administrar instituições da plataforma.");
             criarSeNaoExistir(PermissionCodes.GERENCIAR_USUARIOS,
-                    "Permite cadastrar, editar e desativar usuarios da instituicao.");
+                    "Permite cadastrar, editar e desativar usuários da instituição.");
             criarSeNaoExistir(PermissionCodes.GERENCIAR_ESPACOS,
-                    "Permite cadastrar e manter espacos, subespacos e suas regras operacionais.");
+                    "Permite cadastrar e manter espaços, subespaços e suas regras operacionais.");
             criarSeNaoExistir(PermissionCodes.RESERVAR_ESPACO,
-                    "Permite criar e alterar reservas de espacos.");
+                    "Permite criar e alterar reservas de espaços.");
             criarSeNaoExistir(PermissionCodes.APROVAR_RESERVAS,
-                    "Permite aprovar ou reprovar reservas pendentes de validacao.");
+                    "Permite aprovar ou reprovar reservas pendentes de validação.");
             criarSeNaoExistir(PermissionCodes.GERENCIAR_COMUNICADOS,
-                    "Permite publicar avisos, murais e notificacoes gerenciais.");
+                    "Permite publicar avisos, murais e notificações gerenciais.");
             criarSeNaoExistir(PermissionCodes.VISUALIZAR_AUDITORIA,
                     "Permite consultar trilhas de auditoria e logs administrativos.");
             criarSeNaoExistir(PermissionCodes.GERENCIAR_PLANOS,
-                    "Permite administrar planos, limites e modulos comerciais da plataforma.");
+                    "Permite administrar planos, limites e módulos comerciais da plataforma.");
 
             sincronizarCargosPadrao();
             sincronizarPermissoesPadraoPorCargo();
@@ -106,17 +109,23 @@ public class PermissionBootstrap {
 
     private void sincronizarCargosPadrao() {
         criarCargoSistemaSeNaoExistir("Administrador da Plataforma", null,
-                "Cargo global de sistema com acesso a todas as instituicoes, usuarios, planos e configuracoes.");
-        criarCargoSistemaSeNaoExistir("Administrador da Instituicao", null,
-                "Cargo institucional de sistema com gestao completa limitada a propria instituicao.");
+                "Cargo global de sistema com acesso a todas as instituições, usuários, planos e configurações.");
+        criarCargoSistemaSeNaoExistir("Administrador da Instituição", null,
+                "Cargo institucional de sistema com gestão completa limitada à própria instituição.");
 
         CARGOS_PADRAO_POR_TIPO.forEach((tipo, cargos) -> cargos.forEach(nome ->
-                criarCargoSistemaSeNaoExistir(nome, tipo, "Cargo padrao para instituicoes do tipo " + tipo.name() + ".")));
+                criarCargoSistemaSeNaoExistir(nome, tipo, "Cargo padrão para instituições do tipo " + tipo.name() + ".")));
     }
 
     private void criarCargoSistemaSeNaoExistir(String nome, TipoInstituicao tipoInstituicao, String descricao) {
         cargoRepository.findByNome(nome)
+                .or(() -> cargoRepository.findAll().stream()
+                        .filter(cargo -> normalizar(cargo.getNome()).equals(normalizar(nome)))
+                        .findFirst())
                 .map(cargo -> {
+                    if (!nome.equals(cargo.getNome())) {
+                        cargo.setNome(nome);
+                    }
                     if (cargo.getSistema() == null) {
                         cargo.setSistema(true);
                     }

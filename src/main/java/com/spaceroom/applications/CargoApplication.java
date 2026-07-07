@@ -70,7 +70,7 @@ public class CargoApplication {
     public Cargo buscarPorId(Integer idCargo) {
         return cargoRepository.findById(idCargo)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Cargo nao encontrado para o id: " + idCargo
+                        "Cargo não encontrado para o id: " + idCargo
                 ));
     }
 
@@ -96,7 +96,7 @@ public class CargoApplication {
         Cargo cargo = buscarPorId(idCargo);
         validarGerenciamentoCargo(cargo, cargo);
         if (Boolean.TRUE.equals(cargo.getSistema())) {
-            throw new BusinessException("Cargos de sistema nao podem ser removidos.");
+            throw new BusinessException("Cargos de sistema não podem ser removidos.");
         }
         cargoRepository.delete(cargo);
     }
@@ -109,7 +109,7 @@ public class CargoApplication {
         Usuario usuarioAtual = autorizacaoApplication.obterUsuarioAtualObrigatorio();
         boolean adminPlataforma = autorizacaoApplication.isAdminPlataforma(usuarioAtual);
         if (!adminPlataforma && !autorizacaoApplication.podeGerenciarUsuarios(usuarioAtual)) {
-            throw new BusinessException("Voce nao possui permissao para gerenciar cargos.");
+            throw new BusinessException("Você não possui permissão para gerenciar cargos.");
         }
 
         boolean cargoAtualAdminPlataforma = cargoExistente != null && autorizacaoApplication.cargoConcedeAdminPlataforma(cargoExistente.getIdCargo());

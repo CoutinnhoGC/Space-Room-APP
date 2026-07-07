@@ -13,7 +13,7 @@ public class LogAcaoModel {
     private Long idLog;
     private Long idUsuario;
 
-    @NotBlank(message = "A acao e obrigatoria.")
+    @NotBlank(message = "A ação é obrigatória.")
     private String acao;
 
     @NotBlank(message = "A entidade e obrigatoria.")

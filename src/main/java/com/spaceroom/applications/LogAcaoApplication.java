@@ -25,7 +25,7 @@ public class LogAcaoApplication {
     public LogAcao buscarPorId(Long idLog) {
         return logAcaoRepository.findById(idLog)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "LogAcao nao encontrado para o id: " + idLog
+                        "Log de ação não encontrado para o id: " + idLog
                 ));
     }
 

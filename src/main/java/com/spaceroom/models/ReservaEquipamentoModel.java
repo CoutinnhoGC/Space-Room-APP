@@ -10,10 +10,10 @@ public class ReservaEquipamentoModel {
 
     private Long idReservaEquipamento;
 
-    @NotNull(message = "O id da reserva e obrigatorio.")
+    @NotNull(message = "O id da reserva é obrigatório.")
     private Long idReserva;
 
-    @NotNull(message = "O id do equipamento e obrigatorio.")
+    @NotNull(message = "O id do equipamento é obrigatório.")
     private Long idEquipamento;
 
     private Integer quantidade;
