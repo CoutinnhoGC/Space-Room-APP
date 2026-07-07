@@ -11,11 +11,20 @@ import com.spaceroom.repositories.InstituicaoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.text.Normalizer;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
 
 @Service
 public class CargoApplication {
+
+    private static final Set<String> CARGOS_ADMIN_PLATAFORMA = Set.of(
+            "administrador da plataforma",
+            "admin plataforma",
+            "super admin"
+    );
 
     private final CargoRepository cargoRepository;
     private final InstituicaoRepository instituicaoRepository;
@@ -61,7 +70,7 @@ public class CargoApplication {
 
         return cargos.stream()
                 .filter(cargo -> cargo.getAtivo() == null || cargo.getAtivo())
-                .filter(cargo -> !Boolean.TRUE.equals(cargo.getSistema()) || !autorizacaoApplication.cargoConcedeAdminPlataforma(cargo.getIdCargo()))
+                .filter(cargo -> !isCargoAdminPlataforma(cargo))
                 .filter(cargo -> cargo.getIdInstituicao() == null || Objects.equals(cargo.getIdInstituicao(), usuarioAtual.getIdInstituicao()))
                 .filter(cargo -> cargo.getTipoInstituicao() == null || cargo.getTipoInstituicao().equals(tipoInstituicao))
                 .toList();
@@ -112,8 +121,9 @@ public class CargoApplication {
             throw new BusinessException("Você não possui permissão para gerenciar cargos.");
         }
 
-        boolean cargoAtualAdminPlataforma = cargoExistente != null && autorizacaoApplication.cargoConcedeAdminPlataforma(cargoExistente.getIdCargo());
-        if (!adminPlataforma && (cargoAtualAdminPlataforma || Boolean.TRUE.equals(dadosSolicitados.getSistema()))) {
+        boolean cargoAtualAdminPlataforma = cargoExistente != null && isCargoAdminPlataforma(cargoExistente);
+        boolean cargoSolicitadoAdminPlataforma = dadosSolicitados != null && isCargoAdminPlataforma(dadosSolicitados);
+        if (!adminPlataforma && (cargoAtualAdminPlataforma || cargoSolicitadoAdminPlataforma || Boolean.TRUE.equals(dadosSolicitados.getSistema()))) {
             throw new BusinessException("Somente administradores da plataforma podem gerenciar cargos de sistema.");
         }
 
@@ -134,5 +144,26 @@ public class CargoApplication {
         if (cargo.getPersonalizado() == null) {
             cargo.setPersonalizado(!Boolean.TRUE.equals(cargo.getSistema()));
         }
+    }
+
+    private boolean isCargoAdminPlataforma(Cargo cargo) {
+        if (cargo == null) {
+            return false;
+        }
+
+        return CARGOS_ADMIN_PLATAFORMA.contains(normalizar(cargo.getNome()))
+                || autorizacaoApplication.cargoConcedeAdminPlataforma(cargo.getIdCargo());
+    }
+
+    private String normalizar(String valor) {
+        if (valor == null) {
+            return "";
+        }
+
+        return Normalizer.normalize(valor, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .toLowerCase(Locale.ROOT)
+                .trim()
+                .replaceAll("\\s+", " ");
     }
 }

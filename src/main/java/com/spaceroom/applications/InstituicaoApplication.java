@@ -39,7 +39,7 @@ public class InstituicaoApplication {
     }
 
     public Instituicao atualizar(Long idInstituicao, Instituicao dadosAtualizados) {
-        autorizacaoApplication.validarAcessoInstituicao(idInstituicao);
+        autorizacaoApplication.validarGerenciamentoInstituicao(idInstituicao);
         Instituicao instituicaoExistente = buscarPorId(idInstituicao);
 
         instituicaoExistente.setIdPlano(dadosAtualizados.getIdPlano());

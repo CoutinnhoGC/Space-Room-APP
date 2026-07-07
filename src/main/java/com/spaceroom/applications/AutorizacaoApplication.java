@@ -87,6 +87,21 @@ public class AutorizacaoApplication {
         }
     }
 
+    public void validarGerenciamentoInstituicao(Long idInstituicao) {
+        Usuario usuarioAtual = obterUsuarioAtualObrigatorio();
+        if (isAdminPlataforma(usuarioAtual)) {
+            return;
+        }
+
+        if (!usuarioAtual.getIdInstituicao().equals(idInstituicao)) {
+            throw new BusinessException("Você só pode gerenciar dados da sua própria instituição.");
+        }
+
+        if (!podeGerenciarUsuarios(usuarioAtual) && !podeGerenciarComunicados(usuarioAtual)) {
+            throw new BusinessException("Somente cargos de gestão podem alterar os dados institucionais.");
+        }
+    }
+
     public void validarAcessoInstituicao(Long idInstituicao) {
         Usuario usuarioAtual = obterUsuarioAtualObrigatorio();
         if (isAdminPlataforma(usuarioAtual)) {
