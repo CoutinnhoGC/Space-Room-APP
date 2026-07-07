@@ -9,6 +9,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import com.spaceroom.entities.TipoInstituicao;
+
 @Configuration
 @RequiredArgsConstructor
 public class TipoInstituicaoMigration {
@@ -41,7 +43,29 @@ public class TipoInstituicaoMigration {
                     set tipo = 'INSTITUICAO_ENSINO'::tipo_instituicao
                     where tipo::text in ('ESCOLA', 'FACULDADE', 'UNIVERSIDADE', 'SENAI')
                     """);
+            sincronizarCargoTipoInstituicaoCheck();
             LOGGER.info("TipoInstituicao enum sincronizado com categorias atuais.");
         };
+    }
+
+    private void sincronizarCargoTipoInstituicaoCheck() {
+        Boolean cargoExists = jdbcTemplate.queryForObject(
+                "select to_regclass('cargo') is not null",
+                Boolean.class
+        );
+        if (!Boolean.TRUE.equals(cargoExists)) {
+            return;
+        }
+
+        String valoresPermitidos = java.util.Arrays.stream(TipoInstituicao.values())
+                .map(tipo -> "'" + tipo.name() + "'")
+                .collect(java.util.stream.Collectors.joining(", "));
+
+        jdbcTemplate.execute("alter table cargo drop constraint if exists cargo_tipo_instituicao_check");
+        jdbcTemplate.execute("""
+                alter table cargo
+                add constraint cargo_tipo_instituicao_check
+                check (tipo_instituicao is null or tipo_instituicao in (%s))
+                """.formatted(valoresPermitidos));
     }
 }
