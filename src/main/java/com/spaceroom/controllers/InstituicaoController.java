@@ -2,6 +2,7 @@ package com.spaceroom.controllers;
 
 import com.spaceroom.facades.InstituicaoFacade;
 import com.spaceroom.models.InstituicaoModel;
+import com.spaceroom.models.InstituicaoResumoModel;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -33,6 +34,11 @@ public class InstituicaoController {
     @GetMapping
     public List<InstituicaoModel> listarTodas() {
         return instituicaoFacade.listarTodas();
+    }
+
+    @GetMapping("/resumo")
+    public List<InstituicaoResumoModel> listarResumo() {
+        return instituicaoFacade.listarResumo();
     }
 
     @GetMapping("/{idInstituicao}")
